@@ -75,27 +75,27 @@ public class CacheVideoModule extends ReactContextBaseJavaModule {
                 + " and location: " + location);
     }
 
-   @ReactMethod
-   public void downloadVideoUsingUri(String  videoUri){
-       //ExoPlayer player = new ExoPlayer.Builder(context).build();
-       Log.d("Video Uri ", "" + videoUri);
-       onSampleDownloadButtonClicked(videoUri);
-   }
+    @ReactMethod
+    public void downloadVideoUsingUri(String  videoUri){
+        //ExoPlayer player = new ExoPlayer.Builder(context).build();
+        Log.d("Video Uri ", "" + videoUri);
+        onSampleDownloadButtonClicked(videoUri);
+    }
 
-   @ReactMethod
-   public void isVideoAvailableForOffline(String videoUri, Promise promise){
-       try {
-           DownloadTracker downloadTracker = DemoUtil.getDownloadTracker(/* context= */ context);
-           boolean isDownloaded = downloadTracker.isDownloaded(MediaItem.fromUri(videoUri));
-           Log.d("isDownloaded ",""+isDownloaded);
-           promise.resolve(isDownloaded);
-       } catch (Exception e) {
-           promise.reject("ERROR_CODE");
-       }
-   }
+    @ReactMethod
+    public void isVideoAvailableForOffline(String videoUri, Promise promise){
+        try {
+            DownloadTracker downloadTracker = DemoUtil.getDownloadTracker(/* context= */ context);
+            boolean isDownloaded = downloadTracker.isDownloaded(MediaItem.fromUri(videoUri));
+            Log.d("isDownloaded ",""+isDownloaded);
+            promise.resolve(isDownloaded);
+        } catch (Exception e) {
+            promise.reject("ERROR_CODE");
+        }
+    }
 
-   @ReactMethod
-   public void getAbsolutePath(String uri){
+    @ReactMethod
+    public void getAbsolutePath(String uri){
 //       DataSource.Factory downloadTracker = DemoUtil.getHttpDataSourceFactory(/* context= */ context);
 //       MediaSource videoSource = new ProgressiveMediaSource.Factory(downloadTracker).createMediaSource(MediaItem.fromUri(uri));
 //
@@ -130,7 +130,7 @@ public class CacheVideoModule extends ReactContextBaseJavaModule {
 //       }
 
 
-    //2
+        //2
 //       Cache downloadCache = DemoUtil.getDownloadCache(/* context= */ context);
 //       DataSource.Factory cacheDataSourceFactory =
 //               new CacheDataSource.Factory()
@@ -151,7 +151,7 @@ public class CacheVideoModule extends ReactContextBaseJavaModule {
 //
 //       Log.d("mediaSource ","download"+mediaSource);
 
-       // Create an instance of ExoPlayer
+        // Create an instance of ExoPlayer
 //       ExoPlayer player = new ExoPlayer.Builder(context).build();
 //// Set the playWhenReady flag to true
 //       player.setPlayWhenReady(true);
@@ -170,7 +170,7 @@ public class CacheVideoModule extends ReactContextBaseJavaModule {
 
 
 
-   }
+    }
 
     private static synchronized DatabaseProvider getDatabaseProvider(Context context) {
         if (databaseProvider == null) {
@@ -224,7 +224,7 @@ public class CacheVideoModule extends ReactContextBaseJavaModule {
         }
     }
 
-     private static boolean isNonNullAndChecked(@Nullable MenuItem menuItem) {
+    private static boolean isNonNullAndChecked(@Nullable MenuItem menuItem) {
         // Temporary workaround for layouts that do not inflate the options menu.
         return menuItem != null && menuItem.isChecked();
     }
