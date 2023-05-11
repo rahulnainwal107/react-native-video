@@ -75,4 +75,7 @@ dependencies {
         implementation 'com.google.android.exoplayer:extension-ima:2.18.1'
     }
     implementation "com.squareup.okhttp3:okhttp:" + '$OKHTTP_VERSION'
+    implementation 'com.google.android.exoplayer:extension-cronet:2.18.1'
+    implementation 'org.checkerframework:checker:3.9.1'
+    implementation 'com.google.android.material:material:1.4.0'
 }

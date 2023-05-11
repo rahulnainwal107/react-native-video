@@ -59,6 +59,7 @@ import com.google.android.exoplayer2.drm.UnsupportedDrmException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecInfo;
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
 import com.google.android.exoplayer2.metadata.Metadata;
+import com.google.android.exoplayer2.offline.DownloadHelper;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.MergingMediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
@@ -79,6 +80,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionOverride;
 import com.google.android.exoplayer2.ui.PlayerControlView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultDataSource;
 import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
@@ -90,11 +92,14 @@ import com.google.android.exoplayer2.source.dash.manifest.DashManifest;
 import com.google.android.exoplayer2.source.dash.manifest.Period;
 import com.google.android.exoplayer2.source.dash.manifest.AdaptationSet;
 import com.google.android.exoplayer2.source.dash.manifest.Representation;
+import com.google.android.exoplayer2.upstream.cache.Cache;
+import com.google.android.exoplayer2.upstream.cache.CacheDataSource;
 
 import com.google.android.exoplayer2.ext.ima.ImaAdsLoader;
 import com.google.android.exoplayer2.source.ads.AdsMediaSource;
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
 import com.google.android.exoplayer2.source.ClippingMediaSource;
+import com.google.android.exoplayer2.offline.DownloadRequest;
 
 import com.google.common.collect.ImmutableList;
 import java.net.CookieHandler;
@@ -681,25 +686,50 @@ class ReactExoplayerView extends FrameLayout implements
             DataSpec adTagDataSpec = new DataSpec(adTagUrl);
             mediaSourceWithAds = new AdsMediaSource(videoSource, adTagDataSpec, ImmutableList.of(srcUri, adTagUrl), mediaSourceFactory, adsLoader, exoPlayerView);
         }
-        MediaSource mediaSource;
-        if (mediaSourceList.size() == 0) {
-            if (mediaSourceWithAds != null) {
-                mediaSource = mediaSourceWithAds;
-            } else {
-                mediaSource = videoSource;
-            }
-        } else {
-            if (mediaSourceWithAds != null) {
-                mediaSourceList.add(0, mediaSourceWithAds);
-            } else {
-                mediaSourceList.add(0, videoSource);
-            }
-            MediaSource[] textSourceArray = mediaSourceList.toArray(
-                    new MediaSource[mediaSourceList.size()]
-            );
-            mediaSource = new MergingMediaSource(textSourceArray);
-        }
+        // MediaSource mediaSource;
+        // if (mediaSourceList.size() == 0) {
+        //     if (mediaSourceWithAds != null) {
+        //         mediaSource = mediaSourceWithAds;
+        //     } else {
+        //         mediaSource = videoSource;
+        //     }
+        // } else {
+        //     if (mediaSourceWithAds != null) {
+        //         mediaSourceList.add(0, mediaSourceWithAds);
+        //     } else {
+        //         mediaSourceList.add(0, videoSource);
+        //     }
+        //     MediaSource[] textSourceArray = mediaSourceList.toArray(
+        //             new MediaSource[mediaSourceList.size()]
+        //     );
+        //     mediaSource = new MergingMediaSource(textSourceArray);
+        // }
 
+    //           DataSource.Factory getDataSourceFactory = DemoUtil.getDataSourceFactory(themedReactContext);
+    //   ProgressiveMediaSource mediaSource =
+    //           new ProgressiveMediaSource.Factory(getDataSourceFactory)
+    //                   .createMediaSource(MediaItem.fromUri(srcUri));
+
+    //   Log.d("mediaSource ","download"+mediaSource);
+
+    Cache downloadCache = DemoUtil.getDownloadCache(/* context= */ themedReactContext);
+        DownloadTracker downloadTracker = DemoUtil.getDownloadTracker(/* context= */ themedReactContext);
+        DownloadRequest downloadRequest = downloadTracker.getDownloadRequest(self.srcUri);
+    Log.d("III",""+downloadRequest);
+        DefaultDataSource.Factory upstreamFactory =
+          new DefaultDataSource.Factory(themedReactContext, DemoUtil.getHttpDataSourceFactory(themedReactContext));
+      DataSource.Factory cacheDataSourceFactory =
+    new CacheDataSource.Factory()
+        .setCache(downloadCache)
+        .setUpstreamDataSourceFactory(upstreamFactory)
+        .setCacheWriteDataSinkFactory(null); // Disable writing.
+//        MediaSource mediaSource =
+//        new ProgressiveMediaSource.Factory(cacheDataSourceFactory)
+//            .createMediaSource(MediaItem.fromUri(downloadRequest.uri));
+        //MediaItem mediaItem = downloadRequest.toMediaItem();
+//        MediaSource mediaSource = new ProgressiveMediaSource.Factory(cacheDataSourceFactory)
+//                .createMediaSource(mediaItem);
+        MediaSource mediaSource = DownloadHelper.createMediaSource(downloadRequest, DemoUtil.getDataSourceFactory(themedReactContext));
         // wait for player to be set
         while (player == null) {
             try {
