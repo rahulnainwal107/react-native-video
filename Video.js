@@ -380,7 +380,8 @@ export default class Video extends Component {
       ...StyleSheet.absoluteFillObject,
       resizeMode: this.props.posterResizeMode || 'contain',
     };
-
+    console.log('this.props ',JSON.stringify(this.props))
+    console.log('nativeProps ', JSON.stringify(nativeProps));
     return (
       <View style={nativeProps.style}>
         <RCTVideo
@@ -521,6 +522,7 @@ Video.propTypes = {
   focusable: PropTypes.bool,
   disableBuffering: PropTypes.bool,
   controls: PropTypes.bool,
+  playOffline:PropTypes.bool,
   audioOnly: PropTypes.bool,
   fullscreenAutorotate: PropTypes.bool,
   fullscreenOrientation: PropTypes.oneOf(['all', 'landscape', 'portrait']),

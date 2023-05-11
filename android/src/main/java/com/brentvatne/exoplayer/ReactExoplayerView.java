@@ -214,6 +214,7 @@ class ReactExoplayerView extends FrameLayout implements
     private String[] drmLicenseHeader = null;
     private boolean controls;
     private Uri adTagUrl;
+    private boolean playOffline;
     // \ End props
 
     // React
@@ -677,49 +678,23 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     private void initializePlayerSource(ReactExoplayerView self, DrmSessionManager drmSessionManager) {
-        ArrayList<MediaSource> mediaSourceList = buildTextSources();
-        MediaSource videoSource = buildMediaSource(self.srcUri, self.extension, drmSessionManager, startTimeMs, endTimeMs);
-        MediaSource mediaSourceWithAds = null;
-        if (adTagUrl != null) {
-            MediaSource.Factory mediaSourceFactory = new DefaultMediaSourceFactory(mediaDataSourceFactory)
-                    .setLocalAdInsertionComponents(unusedAdTagUri -> adsLoader, exoPlayerView);
-            DataSpec adTagDataSpec = new DataSpec(adTagUrl);
-            mediaSourceWithAds = new AdsMediaSource(videoSource, adTagDataSpec, ImmutableList.of(srcUri, adTagUrl), mediaSourceFactory, adsLoader, exoPlayerView);
-        }
-        // MediaSource mediaSource;
-        // if (mediaSourceList.size() == 0) {
-        //     if (mediaSourceWithAds != null) {
-        //         mediaSource = mediaSourceWithAds;
-        //     } else {
-        //         mediaSource = videoSource;
-        //     }
-        // } else {
-        //     if (mediaSourceWithAds != null) {
-        //         mediaSourceList.add(0, mediaSourceWithAds);
-        //     } else {
-        //         mediaSourceList.add(0, videoSource);
-        //     }
-        //     MediaSource[] textSourceArray = mediaSourceList.toArray(
-        //             new MediaSource[mediaSourceList.size()]
-        //     );
-        //     mediaSource = new MergingMediaSource(textSourceArray);
-        // }
-
-    //           DataSource.Factory getDataSourceFactory = DemoUtil.getDataSourceFactory(themedReactContext);
+        MediaSource mediaSource;
+        if(playOffline){
+//           DataSource.Factory getDataSourceFactory = DemoUtil.getDataSourceFactory(themedReactContext);
     //   ProgressiveMediaSource mediaSource =
     //           new ProgressiveMediaSource.Factory(getDataSourceFactory)
     //                   .createMediaSource(MediaItem.fromUri(srcUri));
 
     //   Log.d("mediaSource ","download"+mediaSource);
 
-    Cache downloadCache = DemoUtil.getDownloadCache(/* context= */ themedReactContext);
+        Cache downloadCache = DemoUtil.getDownloadCache(/* context= */ themedReactContext);
         DownloadTracker downloadTracker = DemoUtil.getDownloadTracker(/* context= */ themedReactContext);
         DownloadRequest downloadRequest = downloadTracker.getDownloadRequest(self.srcUri);
-    Log.d("III",""+downloadRequest);
+        Log.d("III",""+downloadRequest);
         DefaultDataSource.Factory upstreamFactory =
           new DefaultDataSource.Factory(themedReactContext, DemoUtil.getHttpDataSourceFactory(themedReactContext));
-      DataSource.Factory cacheDataSourceFactory =
-    new CacheDataSource.Factory()
+        DataSource.Factory cacheDataSourceFactory =
+        new CacheDataSource.Factory()
         .setCache(downloadCache)
         .setUpstreamDataSourceFactory(upstreamFactory)
         .setCacheWriteDataSinkFactory(null); // Disable writing.
@@ -729,7 +704,38 @@ class ReactExoplayerView extends FrameLayout implements
         //MediaItem mediaItem = downloadRequest.toMediaItem();
 //        MediaSource mediaSource = new ProgressiveMediaSource.Factory(cacheDataSourceFactory)
 //                .createMediaSource(mediaItem);
-        MediaSource mediaSource = DownloadHelper.createMediaSource(downloadRequest, DemoUtil.getDataSourceFactory(themedReactContext));
+        mediaSource = DownloadHelper.createMediaSource(downloadRequest, DemoUtil.getDataSourceFactory(themedReactContext));
+        }else{
+        ArrayList<MediaSource> mediaSourceList = buildTextSources();
+        MediaSource videoSource = buildMediaSource(self.srcUri, self.extension, drmSessionManager, startTimeMs, endTimeMs);
+        MediaSource mediaSourceWithAds = null;
+        Log.d("playOffline ",""+playOffline);
+        if (adTagUrl != null) {
+            MediaSource.Factory mediaSourceFactory = new DefaultMediaSourceFactory(mediaDataSourceFactory)
+                    .setLocalAdInsertionComponents(unusedAdTagUri -> adsLoader, exoPlayerView);
+            DataSpec adTagDataSpec = new DataSpec(adTagUrl);
+            mediaSourceWithAds = new AdsMediaSource(videoSource, adTagDataSpec, ImmutableList.of(srcUri, adTagUrl), mediaSourceFactory, adsLoader, exoPlayerView);
+        }
+        
+        if (mediaSourceList.size() == 0) {
+            if (mediaSourceWithAds != null) {
+                mediaSource = mediaSourceWithAds;
+            } else {
+                mediaSource = videoSource;
+            }
+        } else {
+            if (mediaSourceWithAds != null) {
+                mediaSourceList.add(0, mediaSourceWithAds);
+            } else {
+                mediaSourceList.add(0, videoSource);
+            }
+            MediaSource[] textSourceArray = mediaSourceList.toArray(
+                    new MediaSource[mediaSourceList.size()]
+            );
+            mediaSource = new MergingMediaSource(textSourceArray);
+        }
+        }
+    
         // wait for player to be set
         while (player == null) {
             try {
@@ -2065,5 +2071,9 @@ class ReactExoplayerView extends FrameLayout implements
     @Override
     public void onAdEvent(AdEvent adEvent) {
         eventEmitter.receiveAdEvent(adEvent.getType().name());
+    }
+
+    public void setPlayOffline(boolean playOffline) {
+        this.playOffline = playOffline;
     }
 }

@@ -81,6 +81,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_SELECTED_VIDEO_TRACK_VALUE = "value";
     private static final String PROP_HIDE_SHUTTER_VIEW = "hideShutterView";
     private static final String PROP_CONTROLS = "controls";
+    private static final String PROP_PLAY_OFFLINE = "playOffline";
 
     private static final String PROP_SUBTITLE_STYLE = "subtitleStyle";
 
@@ -371,6 +372,11 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     @ReactProp(name = PROP_CONTROLS, defaultBoolean = false)
     public void setControls(final ReactExoplayerView videoView, final boolean controls) {
         videoView.setControls(controls);
+    }
+
+    @ReactProp(name = PROP_PLAY_OFFLINE, defaultBoolean = false)
+    public void setPlayOffline(final ReactExoplayerView videoView, final boolean playOffline) {
+        videoView.setPlayOffline(playOffline);
     }
 
     @ReactProp(name = PROP_SUBTITLE_STYLE)
