@@ -14,8 +14,8 @@ const styles = StyleSheet.create({
   },
 });
 
-const { VideoDecoderProperties } = NativeModules
-export { TextTrackType, FilterType, DRMType, VideoDecoderProperties }
+const { VideoDecoderProperties,CacheVideoModule } = NativeModules
+export { TextTrackType, FilterType, DRMType, VideoDecoderProperties,CacheVideoModule }
 
 export default class Video extends Component {
 
