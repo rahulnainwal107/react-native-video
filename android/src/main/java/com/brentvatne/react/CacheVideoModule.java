@@ -21,6 +21,8 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.RenderersFactory;
@@ -51,6 +53,7 @@ import java.util.HashMap;
 public class CacheVideoModule extends ReactContextBaseJavaModule {
     private static final String MODULE_NAME = "CacheVideoModule";
     private final Context context;
+    private static ReactApplicationContext reactContext = null;
     private FragmentManager fragmentManager;
     private MenuItem preferExtensionDecodersMenuItem;
     private static @MonotonicNonNull File downloadDirectory;
@@ -61,6 +64,7 @@ public class CacheVideoModule extends ReactContextBaseJavaModule {
     CacheVideoModule(ReactApplicationContext context) {
         super(context);
         this.context = context;
+        this.reactContext = context;
     }
 
     @NonNull
@@ -170,6 +174,12 @@ public class CacheVideoModule extends ReactContextBaseJavaModule {
 
 
 
+    }
+
+    @ReactMethod
+    public static void downloadEvent(String eventName, WritableMap params) {
+        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(eventName, params);
     }
 
     private static synchronized DatabaseProvider getDatabaseProvider(Context context) {

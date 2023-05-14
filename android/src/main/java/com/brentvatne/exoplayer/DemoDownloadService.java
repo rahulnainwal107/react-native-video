@@ -17,10 +17,14 @@ package com.brentvatne.exoplayer;
 
 import static com.brentvatne.exoplayer.DemoUtil.DOWNLOAD_NOTIFICATION_CHANNEL_ID;
 
+import com.brentvatne.react.CacheVideoModule;
 import com.brentvatne.react.R;
 import android.app.Notification;
 import android.content.Context;
 import androidx.annotation.Nullable;
+
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableMap;
 import com.google.android.exoplayer2.offline.Download;
 import com.google.android.exoplayer2.offline.DownloadManager;
 import com.google.android.exoplayer2.offline.DownloadService;
@@ -106,6 +110,7 @@ public class DemoDownloadService extends DownloadService {
       Log.d("DOWNLOAD_STATE ",""+download);
 
       Log.d("Completed percentage ",""+download.getPercentDownloaded());
+      WritableMap params = Arguments.createMap();
       if (download.state == Download.STATE_COMPLETED) {
         notification =
             notificationHelper.buildDownloadCompletedNotification(
@@ -113,6 +118,9 @@ public class DemoDownloadService extends DownloadService {
                 R.drawable.ic_download_done,
                 /* contentIntent= */ null,
                 Util.fromUtf8Bytes(download.request.data));
+        params.putString("id", download.request.id);
+        CacheVideoModule.downloadEvent("DOWNLOAD_COMPLETED", params);
+        NotificationUtil.setNotification(context, nextNotificationId++, notification);
       } else if (download.state == Download.STATE_FAILED) {
         notification =
             notificationHelper.buildDownloadFailedNotification(
@@ -120,11 +128,28 @@ public class DemoDownloadService extends DownloadService {
                 R.drawable.ic_download_done,
                 /* contentIntent= */ null,
                 Util.fromUtf8Bytes(download.request.data));
-      } else {
+        params.putString("id", download.request.id);
+        CacheVideoModule.downloadEvent("DOWNLOAD_FAILED", params);
+        NotificationUtil.setNotification(context, nextNotificationId++, notification);
+      } else if (download.state == Download.STATE_QUEUED) {
+        params.putString("id", download.request.id);
+        CacheVideoModule.downloadEvent("DOWNLOAD_QUEUED", params);
+      } else if (download.state == Download.STATE_STOPPED) {
+        params.putString("id", download.request.id);
+        CacheVideoModule.downloadEvent("DOWNLOAD_STOPPED", params);
+      }else if (download.state == Download.STATE_DOWNLOADING) {
+        params.putString("id", download.request.id);
+        CacheVideoModule.downloadEvent("DOWNLOADING", params);
+      }else if (download.state == Download.STATE_REMOVING) {
+        params.putString("id", download.request.id);
+        CacheVideoModule.downloadEvent("DOWNLOAD_REMOVING", params);
+      }else {
         Log.d("DOWNLOAD_STATE_ELSE ",""+download);
+        params.putString("id", download.request.id);
+        CacheVideoModule.downloadEvent("DOWNLOAD_RESTARTING", params);
         return;
       }
-      NotificationUtil.setNotification(context, nextNotificationId++, notification);
+      //NotificationUtil.setNotification(context, nextNotificationId++, notification);
     }
   }
 }

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { StyleSheet, requireNativeComponent, NativeModules, UIManager, View, Image, Platform, findNodeHandle } from 'react-native';
+import { StyleSheet, requireNativeComponent, NativeModules, UIManager, View, Image, Platform, findNodeHandle,NativeEventEmitter } from 'react-native';
 import { ViewPropTypes, ImagePropTypes } from 'deprecated-react-native-prop-types';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import TextTrackType from './TextTrackType';
@@ -14,8 +14,10 @@ const styles = StyleSheet.create({
   },
 });
 
-const { VideoDecoderProperties,CacheVideoModule:{downloadVideoUsingUri,isVideoAvailableForOffline} } = NativeModules
-export { TextTrackType, FilterType, DRMType, VideoDecoderProperties,downloadVideoUsingUri,isVideoAvailableForOffline }
+const { VideoDecoderProperties,CacheVideoModule } = NativeModules
+const {downloadVideoUsingUri,isVideoAvailableForOffline} =CacheVideoModule;
+const downloadManagerEmitter = new NativeEventEmitter(CacheVideoModule);
+export { TextTrackType, FilterType, DRMType, VideoDecoderProperties,downloadVideoUsingUri,isVideoAvailableForOffline,downloadManagerEmitter }
 
 export default class Video extends Component {
 
