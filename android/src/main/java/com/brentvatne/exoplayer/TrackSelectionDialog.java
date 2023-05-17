@@ -1,5 +1,6 @@
 package com.brentvatne.exoplayer;
 
+import com.brentvatne.react.CacheVideoModule;
 import com.brentvatne.react.R;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -32,6 +33,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableMap;
 
 /** Dialog to select tracks. */
 public final class TrackSelectionDialog extends DialogFragment {
@@ -243,6 +246,9 @@ public final class TrackSelectionDialog extends DialogFragment {
         okButton.setOnClickListener(
                 view -> {
                     onClickListener.onClick(getDialog(), DialogInterface.BUTTON_POSITIVE);
+                    WritableMap params = Arguments.createMap();
+                    params.putBoolean("isOkButtonPressed", true);
+                    CacheVideoModule.downloadEvent("OK_BUTTON_PRESS",params);
                     dismiss();
                 });
         return dialogView;
