@@ -254,6 +254,7 @@ public final class TrackSelectionDialog extends DialogFragment {
                     onClickListener.onClick(getDialog(), DialogInterface.BUTTON_POSITIVE);
                     WritableMap params = Arguments.createMap();
                     params.putBoolean("isOkButtonPressed", true);
+                    params.putString("id", CacheVideoModule.videoUri);
                     CacheVideoModule.downloadEvent("OK_BUTTON_PRESS",params);
                     dismiss();
                 });
