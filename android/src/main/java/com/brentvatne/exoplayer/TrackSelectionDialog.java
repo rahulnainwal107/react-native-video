@@ -243,12 +243,18 @@ public final class TrackSelectionDialog extends DialogFragment {
         tabLayout.setupWithViewPager(viewPager);
         tabLayout.setVisibility(tabFragments.size() > 1 ? View.VISIBLE : View.GONE);
         //Get the tab at the desired position
-        TabLayout.Tab tabToRemove = tabLayout.getTabAt(1);
-        if (tabToRemove != null) {
-            // Remove the tab
-            tabLayout.removeTab(tabToRemove);
-        }
-        cancelButton.setOnClickListener(view -> dismiss());
+         TabLayout.Tab tabToRemove = tabLayout.getTabAt(1);
+         if (tabToRemove != null) {
+             // Remove the tab
+             tabLayout.removeTab(tabToRemove);
+         }
+        cancelButton.setOnClickListener(view -> {
+            WritableMap params = Arguments.createMap();
+            params.putBoolean("isOkButtonPressed", false);
+            params.putString("id", CacheVideoModule.videoUri);
+            CacheVideoModule.downloadEvent("CANCEL_BUTTON_PRESS",params);
+            dismiss();
+            });
         okButton.setOnClickListener(
                 view -> {
                     onClickListener.onClick(getDialog(), DialogInterface.BUTTON_POSITIVE);
