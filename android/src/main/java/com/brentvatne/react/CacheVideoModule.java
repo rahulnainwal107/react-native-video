@@ -61,6 +61,7 @@ public class CacheVideoModule extends ReactContextBaseJavaModule {
     private static DataSource.@MonotonicNonNull Factory httpDataSourceFactory;
     private static final String DOWNLOAD_CONTENT_DIRECTORY = "downloads";
     private static @MonotonicNonNull Cache downloadCache;
+    public static String videoUri = null;
     CacheVideoModule(ReactApplicationContext context) {
         super(context);
         this.context = context;
@@ -83,6 +84,7 @@ public class CacheVideoModule extends ReactContextBaseJavaModule {
     public void downloadVideoUsingUri(String  videoUri){
         //ExoPlayer player = new ExoPlayer.Builder(context).build();
         Log.d("Video Uri ", "" + videoUri);
+        this.videoUri = videoUri;
         onSampleDownloadButtonClicked(videoUri);
     }
 
