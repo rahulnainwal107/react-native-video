@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.SparseArray;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +39,26 @@ import com.facebook.react.bridge.WritableMap;
 
 /** Dialog to select tracks. */
 public final class TrackSelectionDialog extends DialogFragment {
+
+     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setCancelable(false); // Disable cancellation on outside touch or back button press
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Disable cancellation when the back button is pressed
+        getDialog().setOnKeyListener((dialog, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                // Handle the back button press here
+                // Return true to consume the event and prevent the dialog from closing
+                return true;
+            }
+            return false;
+        });
+    }
 
     /** Called when tracks are selected. */
     public interface TrackSelectionListener {

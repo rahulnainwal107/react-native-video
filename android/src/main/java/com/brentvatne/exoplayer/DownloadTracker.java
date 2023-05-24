@@ -17,6 +17,7 @@ package com.brentvatne.exoplayer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.brentvatne.react.CacheVideoModule;
 import com.brentvatne.react.R;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -301,24 +302,26 @@ public class DownloadTracker {
         downloadHelper.release();
         return;
       }
-
-      Tracks tracks = downloadHelper.getTracks(/* periodIndex= */ 0);
-      if (!TrackSelectionDialog.willHaveContent(tracks)) {
-        Log.d(TAG, "No dialog content. Downloading entire stream.");
         startDownload();
         downloadHelper.release();
         return;
-      }
-      trackSelectionDialog =
-          TrackSelectionDialog.createForTracksAndParameters(
-              /* titleId= */ R.string.exo_download_description,
-              tracks,
-              DownloadHelper.getDefaultTrackSelectorParameters(context),
-              /* allowAdaptiveSelections= */ false,
-              /* allowMultipleOverrides= */ true,
-              /* onTracksSelectedListener= */ this,
-              /* onDismissListener= */ this);
-      trackSelectionDialog.show(fragmentManager, /* tag= */ null);
+      // Tracks tracks = downloadHelper.getTracks(/* periodIndex= */ 0);
+      // if (!TrackSelectionDialog.willHaveContent(tracks)) {
+      //   Log.d(TAG, "No dialog content. Downloading entire stream.");
+      //   startDownload();
+      //   downloadHelper.release();
+      //   return;
+      // }
+      // trackSelectionDialog =
+      //     TrackSelectionDialog.createForTracksAndParameters(
+      //         /* titleId= */ R.string.exo_download_description,
+      //         tracks,
+      //         DownloadHelper.getDefaultTrackSelectorParameters(context),
+      //         /* allowAdaptiveSelections= */ false,
+      //         /* allowMultipleOverrides= */ true,
+      //         /* onTracksSelectedListener= */ this,
+      //         /* onDismissListener= */ this);
+      // trackSelectionDialog.show(fragmentManager, /* tag= */ null);
     }
 
     /**
@@ -348,7 +351,7 @@ public class DownloadTracker {
       Log.d("DownloadRequest ","++++ "+keySetId);
       return downloadHelper
           .getDownloadRequest(
-              Util.getUtf8Bytes(checkNotNull("Video".toString())))
+              Util.getUtf8Bytes(checkNotNull(CacheVideoModule.videoTitle.toString())))
           .copyWithKeySetId(keySetId);
     }
   }
