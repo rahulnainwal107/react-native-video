@@ -186,6 +186,12 @@ public class CacheVideoModule extends ReactContextBaseJavaModule {
                 .emit(eventName, params);
     }
 
+    @ReactMethod
+    public void removeAllDownloads(){
+        DownloadManager downloadManager = DemoUtil.getDownloadManager(context);
+        downloadManager.removeAllDownloads();
+    }
+
     private static synchronized DatabaseProvider getDatabaseProvider(Context context) {
         if (databaseProvider == null) {
             databaseProvider = new StandaloneDatabaseProvider(context);
