@@ -15,13 +15,13 @@ const styles = StyleSheet.create({
 });
 
 const { VideoDecoderProperties,CacheVideoModule,DownloadEventEmitter } = NativeModules
-const {downloadVideoUsingUri,isVideoAvailableForOffline,removeAllDownloads} =CacheVideoModule;
+const {downloadVideoUsingUri,isVideoAvailableForOffline,removeAllDownloads,restorePersistenceManager} =CacheVideoModule;
 let downloadManagerEmitter;
 if(Platform.OS ==='android')
  downloadManagerEmitter = new NativeEventEmitter(CacheVideoModule);
  else
  downloadManagerEmitter = new NativeEventEmitter(DownloadEventEmitter);
- export { TextTrackType, FilterType, DRMType, VideoDecoderProperties,downloadVideoUsingUri,isVideoAvailableForOffline,downloadManagerEmitter ,removeAllDownloads}
+ export { TextTrackType, FilterType, DRMType, VideoDecoderProperties,downloadVideoUsingUri,isVideoAvailableForOffline,downloadManagerEmitter ,removeAllDownloads,restorePersistenceManager}
 
 export default class Video extends Component {
 
