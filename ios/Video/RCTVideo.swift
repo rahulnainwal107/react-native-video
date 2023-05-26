@@ -33,6 +33,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
 
     /* For sending videoProgress events */
     private var _controls:Bool = false
+    private var _playOffline:Bool = false
 
     /* Keep track of any modifiers, need to be applied after each play */
     private var _volume:Float = 1.0
@@ -513,6 +514,11 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     func setMuted(_ muted:Bool) {
         _muted = muted
         applyModifiers()
+    }
+
+    @objc
+    func setPlayOffline(_ playOffline:Bool) {
+        _playOffline = playOffline;
     }
 
     @objc
