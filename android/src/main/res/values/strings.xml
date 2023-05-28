@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+  <string name="error_no_decoder">This device does not provide a decoder for <xliff:g id="mime_type">%1$s</xliff:g></string>
+
+  <string name="error_no_secure_decoder">This device does not provide a secure decoder for <xliff:g id="mime_type">%1$s</xliff:g></string>
+
+  <string name="error_querying_decoders">Unable to query device decoders</string>
+
+  <string name="error_instantiating_decoder">Unable to instantiate decoder <xliff:g id="decoder_name">%1$s</xliff:g></string>
+  
+  <string name="error_drm_not_supported">Protected content not supported on API levels below 18</string>
+
+  <string name="unrecognized_media_format">Unrecognized media format</string>
+
+  <string name="error_drm_unsupported_scheme">This device does not support the required DRM scheme</string>
+
+  <string name="error_drm_unknown">An unknown DRM error occurred</string>
+
+  <string name="app_name">ExoPlayPOC</string>
+        <!-- Description for a button that downloads a piece of media content onto the device. [CHAR LIMIT=20] -->
+        <string name="exo_download_description">Download</string>
+        <!-- Default name for a notification channel corresponding to media downloads. [CHAR LIMIT=40] -->
+        <string name="exo_download_notification_channel_name">Downloads</string>
+        <!-- Shown in a notification or UI component to indicate a download is currently downloading. [CHAR LIMIT=40] -->
+        <string name="exo_download_downloading">Downloading</string>
+        <!-- Shown in a notification or UI component to indicate a download has finished downloading. [CHAR LIMIT=40] -->
+        <string name="exo_download_completed">Download completed</string>
+        <!-- Shown in a notification or UI component to indicate a download has failed. [CHAR LIMIT=40] -->
+        <string name="exo_download_failed">Download failed</string>
+        <!-- Shown in a notification or UI component to indicate downloads are being removed from the device. [CHAR LIMIT=40] -->
+        <string name="exo_download_removing">Removing downloads</string>
+        <!-- Shown in a notification or UI component to indicate downloads are paused. [CHAR LIMIT=40] -->
+        <string name="exo_download_paused">Downloads paused</string>
+        <!-- Shown in a notification or UI component to indicate downloads are paused waiting for network connectivity. [CHAR LIMIT=40] -->
+        <string name="exo_download_paused_for_network">Downloads waiting for network</string>
+        <!-- Shown in a notification or UI component to indicate downloads are paused waiting for WiFi connectivity. [CHAR LIMIT=40] -->
+        <string name="exo_download_paused_for_wifi">Downloads waiting for WiFi</string>
+
+        <string name="track_selection_title">Select tracks</string>
+
+        <!-- The title of a track selection view for video tracks. [CHAR LIMIT=20] -->
+        <string name="exo_track_selection_title_video">Video</string>
+        <!-- The title of a track selection view for audio tracks. [CHAR LIMIT=20] -->
+        <string name="exo_track_selection_title_audio">Audio</string>
+        <!-- The title of a track selection view for text (i.e. subtitle or caption) tracks. [CHAR LIMIT=20] -->
+        <string name="exo_track_selection_title_text">Text</string>
+
+        <string name="error_drm_unsupported_before_api_18">DRM content not supported on API levels below 18</string>
+        <string name="download_start_error_offline_license">Failed to obtain offline license</string>
+        <string name="download_live_unsupported">This demo app does not support downloading live content</string>
+        <string name="download_start_error">Failed to start download</string>
+        <string name="download_playlist_unsupported">This demo app does not support downloading playlists</string>
+        <string name="download_ads_unsupported">IMA does not support offline ads</string>
+        <string name="download_scheme_unsupported">This demo app only supports downloading http streams</string>
+</resources>
