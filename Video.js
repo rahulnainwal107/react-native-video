@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { StyleSheet, requireNativeComponent, NativeModules, View, ViewPropTypes, Image, Platform, findNodeHandle } from 'react-native';
+import { StyleSheet, requireNativeComponent, NativeModules, View, ViewPropTypes, Image, Platform, findNodeHandle,NativeEventEmitter } from 'react-native';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import TextTrackType from './TextTrackType';
 import FilterType from './FilterType';
@@ -13,7 +13,14 @@ const styles = StyleSheet.create({
   },
 });
 
-export { TextTrackType, FilterType, DRMType };
+const { VideoDecoderProperties,CacheVideoModule,DownloadEventEmitter } = NativeModules
+const {downloadVideoUsingUri,isVideoAvailableForOffline,removeAllDownloads,restorePersistenceManager} =CacheVideoModule;
+let downloadManagerEmitter;
+if(Platform.OS ==='android')
+ downloadManagerEmitter = new NativeEventEmitter(CacheVideoModule);
+ else
+ downloadManagerEmitter = new NativeEventEmitter(DownloadEventEmitter);
+ export { TextTrackType, FilterType, DRMType, VideoDecoderProperties,downloadVideoUsingUri,isVideoAvailableForOffline,downloadManagerEmitter ,removeAllDownloads,restorePersistenceManager}
 
 export default class Video extends Component {
 
@@ -471,6 +478,7 @@ Video.propTypes = {
   reportBandwidth: PropTypes.bool,
   disableFocus: PropTypes.bool,
   controls: PropTypes.bool,
+  playOffline:PropTypes.bool,
   audioOnly: PropTypes.bool,
   currentTime: PropTypes.number,
   fullscreenAutorotate: PropTypes.bool,
