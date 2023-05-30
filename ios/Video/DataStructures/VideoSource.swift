@@ -8,6 +8,7 @@ struct VideoSource {
     let requestHeaders: Dictionary<String,Any>?
     let startTime: Int64?
     let endTime: Int64?
+    let playOffline:Bool
     
     let json: NSDictionary?
     
@@ -22,6 +23,7 @@ struct VideoSource {
             self.requestHeaders = nil
             self.startTime = nil
             self.endTime = nil
+            self.playOffline = false
             return
         }
         self.json = json
@@ -33,5 +35,6 @@ struct VideoSource {
         self.requestHeaders = json["requestHeaders"] as? Dictionary<String,Any>
         self.startTime = json["startTime"] as? Int64
         self.endTime = json["endTime"] as? Int64
+        self.playOffline = json["playOffline"] as? Bool ?? false
     }
 }

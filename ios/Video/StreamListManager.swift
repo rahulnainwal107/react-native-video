@@ -28,17 +28,19 @@ class StreamListManager {
     
     private init() {
         do {
-            guard let streamsFilepath = Bundle.main.url(forResource: "Streams", withExtension: "plist") else { return }
-            
-            let data = try Data(contentsOf: streamsFilepath)
-            
-            let plistDecoder = PropertyListDecoder()
+//            guard let streamsFilepath = Bundle.main.url(forResource: "Streams", withExtension: "plist") else { return }
+//
+//            let data = try Data(contentsOf: streamsFilepath)
+//
+//            let plistDecoder = PropertyListDecoder()
             
 //            streams = try plistDecoder.decode([Stream].self, from: data)
 //
 //            for stream in streams {
 //                streamMap[stream.name] = stream
 //            }
+            let stream = Stream(name: "Downloading Video 00000088", playlistURL: "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8")
+            streamMap[stream.name] = stream
         } catch {
             fatalError("An error occured when reading the Streams.plist file: \(error.localizedDescription)")
         }

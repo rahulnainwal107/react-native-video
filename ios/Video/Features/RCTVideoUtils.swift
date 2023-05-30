@@ -303,8 +303,9 @@ enum RCTVideoUtils {
         ? URL(string: source.uri ?? "")
         : URL(fileURLWithPath: bundlePath)
         let assetOptions:NSMutableDictionary! = NSMutableDictionary()
-        
-        if source.isNetwork {
+        if source.playOffline {
+            asset = AssetPersistenceManager.sharedManager.localAssetForStream(withName: source.uri!)?.urlAsset;
+        }else if source.isNetwork {
             if let headers = source.requestHeaders, headers.count > 0 {
                 assetOptions.setObject(headers, forKey:"AVURLAssetHTTPHeaderFieldsKey" as NSCopying)
             }

@@ -12,15 +12,15 @@ import UIKit
         ) -> Void {
             print("Calling downloadVideoUsingUri with URL ",param);
             //DownloadEventEmitter.emitter.sendEvent(withName: "DOWNLOADING", body: ["isOkButtonPressed": true])
-            let asset = Asset(stream: Stream(name: "Downloading Video 00000088", playlistURL: "https://d14nfbmksdrc0w.cloudfront.net/Disenchanted_2022_Official_Trailer/default.m3u8"), urlAsset: AVURLAsset(url: URL(string: "https://d14nfbmksdrc0w.cloudfront.net/Disenchanted_2022_Official_Trailer/default.m3u8")!))
+            let asset = Asset(stream: Stream(name: param, playlistURL: param), urlAsset: AVURLAsset(url: URL(string: param)!))
             AssetPersistenceManager.sharedManager.downloadStream(for: asset);
-
+            //AssetListManager.sharedManager.assets.append(asset);
         }
         @objc(isVideoAvailableForOffline:resolver:rejecter:) public func isVideoAvailableForOffline(
           _ param: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock
         ) -> Void {
             print("Calling isVideoAvailableForOffline with URL ",param);
-            let asset = Asset(stream: Stream(name: "Downloading Video 00000088", playlistURL: "https://d14nfbmksdrc0w.cloudfront.net/Disenchanted_2022_Official_Trailer/default.m3u8"), urlAsset: AVURLAsset(url: URL(string: "https://d14nfbmksdrc0w.cloudfront.net/Disenchanted_2022_Official_Trailer/default.m3u8")!))
+            let asset = Asset(stream: Stream(name: param, playlistURL: param), urlAsset: AVURLAsset(url: URL(string: param)!))
             let downloadState = AssetPersistenceManager.sharedManager.downloadState(for: asset);
             if(downloadState.rawValue == Asset.DownloadState.downloaded.rawValue){
                 return resolve(true);

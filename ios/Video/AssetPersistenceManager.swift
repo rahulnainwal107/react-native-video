@@ -36,7 +36,7 @@ class AssetPersistenceManager: NSObject {
         super.init()
 
         // Create the configuration for the AVAssetDownloadURLSession.
-        let backgroundConfiguration = URLSessionConfiguration.background(withIdentifier: "AAPL-Identifiero")
+        let backgroundConfiguration = URLSessionConfiguration.background(withIdentifier: "AAPL-Identifier-RN")
 
         // Create the AVAssetDownloadURLSession using the configuration.
         assetDownloadURLSession =
@@ -56,13 +56,13 @@ class AssetPersistenceManager: NSObject {
             for task in tasksArray {
                 guard let assetDownloadTask = task as? AVAggregateAssetDownloadTask, let assetName = task.taskDescription else { break }
                 
-                let stream = StreamListManager.shared.stream(withName: assetName)
+                guard let asset = AssetListManager.sharedManager.assets.first(where: {$0.stream.name == assetName}) else { return }
                 
                 let urlAsset = assetDownloadTask.urlAsset
                 
-                let asset = Asset(stream: stream, urlAsset: urlAsset)
+                let assetTask = Asset(stream: asset.stream, urlAsset: urlAsset)
                 
-                self.activeDownloadsMap[assetDownloadTask] = asset
+                self.activeDownloadsMap[assetDownloadTask] = assetTask
             }
             
             NotificationCenter.default.post(name: .AssetPersistenceManagerDidRestoreState, object: nil)
@@ -121,6 +121,12 @@ class AssetPersistenceManager: NSObject {
     /// Returns an Asset pointing to a file on disk if it exists.
     func localAssetForStream(withName name: String) -> Asset? {
         let userDefaults = UserDefaults.standard
+        // print("KEY-VALUE 1 ",userDefaults.dictionaryRepresentation())
+        // print("KEYS 2 ",UserDefaults.standard.dictionaryRepresentation().keys)
+        // let val = userDefaults.value(forKey: name) as? Data;
+        // print("Value ",val);
+        // let val1 = userDefaults.value(forKey: name)
+        // print("Value1 ",val1);
         guard let localFileLocation = userDefaults.value(forKey: name) as? Data else { return nil }
         
         var asset: Asset?
@@ -134,9 +140,10 @@ class AssetPersistenceManager: NSObject {
             }
             
             let urlAsset = AVURLAsset(url: url)
-            let stream = StreamListManager.shared.stream(withName: name)
+            //let stream = StreamListManager.shared.stream(withName: name)
+            let asse = Asset(stream: Stream(name: "Dummy Name", playlistURL: name), urlAsset: AVURLAsset(url: URL(string: name)!))
             
-            asset = Asset(stream: stream, urlAsset: urlAsset)
+            asset = Asset(stream: asse.stream, urlAsset: urlAsset) 
             
             return asset
         } catch {
@@ -282,6 +289,8 @@ extension AssetPersistenceManager: AVAssetDownloadDelegate {
                 let bookmark = try downloadURL.bookmarkData()
 
                 userDefaults.set(bookmark, forKey: asset.stream.name)
+                // print("KEY-VALUE ",userDefaults.dictionaryRepresentation())
+                // print("KEYS ",UserDefaults.standard.dictionaryRepresentation().keys)
             } catch {
                 print("Failed to create bookmarkData for download URL.")
             }
@@ -315,7 +324,7 @@ extension AssetPersistenceManager: AVAssetDownloadDelegate {
          */
 
         guard let asset = activeDownloadsMap[aggregateAssetDownloadTask] else { return }
-
+        DownloadEventEmitter.emitter.sendEvent(withName: "DOWNLOAD_COMPLETED", body: ["id": asset.stream.playlistURL])
         // Prepare the basic userInfo dictionary that will be posted as part of our notification.
         var userInfo = [String: Any]()
         userInfo[Asset.Keys.name] = asset.stream.name
