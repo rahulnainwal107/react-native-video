@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A7A74C3E2A28C052001CC065 /* Asset.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A74C3D2A28C052001CC065 /* Asset.swift */; };
+		A7A74C412A28C0F0001CC065 /* Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A74C402A28C0F0001CC065 /* Stream.swift */; };
+		A7A74C432A28C118001CC065 /* AssetPersistenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A74C422A28C118001CC065 /* AssetPersistenceManager.swift */; };
+		A7A74C452A28C13B001CC065 /* CacheVideoModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A74C442A28C13B001CC065 /* CacheVideoModule.swift */; };
+		A7A74C472A28C15B001CC065 /* CacheVideoModule.m in Sources */ = {isa = PBXBuildFile; fileRef = A7A74C462A28C15B001CC065 /* CacheVideoModule.m */; };
+		A7A74C492A28C190001CC065 /* DownloadEventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = A7A74C482A28C190001CC065 /* DownloadEventEmitter.m */; };
+		A7A74C4B2A28C1A3001CC065 /* DownloadEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A74C4A2A28C1A3001CC065 /* DownloadEventEmitter.swift */; };
 		D1107C0A2110259000073188 /* UIView+FindUIViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D1107C032110259000073188 /* UIView+FindUIViewController.m */; };
 		D1107C0B2110259000073188 /* UIView+FindUIViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D1107C032110259000073188 /* UIView+FindUIViewController.m */; };
 		D1107C0C2110259000073188 /* RCTVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = D1107C052110259000073188 /* RCTVideo.m */; };
@@ -41,14 +48,14 @@
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libRCTVideo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRCTVideo.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		641E28441F0EEC8500443AF6 /* libRCTVideo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRCTVideo.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		A7A74C052A289B50001CC065 /* Asset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Asset.swift; sourceTree = "<group>"; };
-		A7A74C062A289B7F001CC065 /* react-native-video-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "react-native-video-Bridging-Header.h"; sourceTree = "<group>"; };
-		A7A74C072A289BAA001CC065 /* AssetPersistenceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetPersistenceManager.swift; sourceTree = "<group>"; };
-		A7A74C082A289BD7001CC065 /* CacheVideoModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheVideoModule.swift; sourceTree = "<group>"; };
-		A7A74C092A289BFA001CC065 /* CacheVideoModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CacheVideoModule.m; sourceTree = "<group>"; };
-		A7A74C0A2A289C19001CC065 /* DownloadEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadEventEmitter.swift; sourceTree = "<group>"; };
-		A7A74C0B2A289C34001CC065 /* DownloadEventEmitter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DownloadEventEmitter.m; sourceTree = "<group>"; };
-		A7A74C0C2A289CFE001CC065 /* Stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stream.swift; sourceTree = "<group>"; };
+		A7A74C3D2A28C052001CC065 /* Asset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Asset.swift; path = Video/Asset.swift; sourceTree = "<group>"; };
+		A7A74C3F2A28C0A0001CC065 /* react-native-video-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "react-native-video-Bridging-Header.h"; path = "Video/react-native-video-Bridging-Header.h"; sourceTree = "<group>"; };
+		A7A74C402A28C0F0001CC065 /* Stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Stream.swift; path = Video/Stream.swift; sourceTree = "<group>"; };
+		A7A74C422A28C118001CC065 /* AssetPersistenceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AssetPersistenceManager.swift; path = Video/AssetPersistenceManager.swift; sourceTree = "<group>"; };
+		A7A74C442A28C13B001CC065 /* CacheVideoModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CacheVideoModule.swift; path = Video/CacheVideoModule.swift; sourceTree = "<group>"; };
+		A7A74C462A28C15B001CC065 /* CacheVideoModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = CacheVideoModule.m; path = Video/CacheVideoModule.m; sourceTree = "<group>"; };
+		A7A74C482A28C190001CC065 /* DownloadEventEmitter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = DownloadEventEmitter.m; path = Video/DownloadEventEmitter.m; sourceTree = "<group>"; };
+		A7A74C4A2A28C1A3001CC065 /* DownloadEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DownloadEventEmitter.swift; path = Video/DownloadEventEmitter.swift; sourceTree = "<group>"; };
 		D1107C012110259000073188 /* RCTVideoPlayerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCTVideoPlayerViewController.h; path = Video/RCTVideoPlayerViewController.h; sourceTree = "<group>"; };
 		D1107C022110259000073188 /* RCTVideoPlayerViewControllerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCTVideoPlayerViewControllerDelegate.h; path = Video/RCTVideoPlayerViewControllerDelegate.h; sourceTree = "<group>"; };
 		D1107C032110259000073188 /* UIView+FindUIViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIView+FindUIViewController.m"; path = "Video/UIView+FindUIViewController.m"; sourceTree = "<group>"; };
@@ -96,14 +103,14 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-				A7A74C0C2A289CFE001CC065 /* Stream.swift */,
-				A7A74C0B2A289C34001CC065 /* DownloadEventEmitter.m */,
-				A7A74C0A2A289C19001CC065 /* DownloadEventEmitter.swift */,
-				A7A74C092A289BFA001CC065 /* CacheVideoModule.m */,
-				A7A74C082A289BD7001CC065 /* CacheVideoModule.swift */,
-				A7A74C072A289BAA001CC065 /* AssetPersistenceManager.swift */,
-				A7A74C062A289B7F001CC065 /* react-native-video-Bridging-Header.h */,
-				A7A74C052A289B50001CC065 /* Asset.swift */,
+				A7A74C4A2A28C1A3001CC065 /* DownloadEventEmitter.swift */,
+				A7A74C482A28C190001CC065 /* DownloadEventEmitter.m */,
+				A7A74C462A28C15B001CC065 /* CacheVideoModule.m */,
+				A7A74C442A28C13B001CC065 /* CacheVideoModule.swift */,
+				A7A74C422A28C118001CC065 /* AssetPersistenceManager.swift */,
+				A7A74C402A28C0F0001CC065 /* Stream.swift */,
+				A7A74C3F2A28C0A0001CC065 /* react-native-video-Bridging-Header.h */,
+				A7A74C3D2A28C052001CC065 /* Asset.swift */,
 				D1107C072110259000073188 /* RCTVideo.h */,
 				D1107C052110259000073188 /* RCTVideo.m */,
 				D1107C092110259000073188 /* RCTVideoManager.h */,
@@ -167,6 +174,7 @@
 				TargetAttributes = {
 					58B511DA1A9E6C8500147676 = {
 						CreatedOnToolsVersion = 6.1.1;
+						LastSwiftMigration = 1420;
 					};
 					641E28431F0EEC8500443AF6 = {
 						CreatedOnToolsVersion = 8.3.3;
@@ -199,7 +207,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				D1107C0A2110259000073188 /* UIView+FindUIViewController.m in Sources */,
+				A7A74C492A28C190001CC065 /* DownloadEventEmitter.m in Sources */,
+				A7A74C432A28C118001CC065 /* AssetPersistenceManager.swift in Sources */,
+				A7A74C452A28C13B001CC065 /* CacheVideoModule.swift in Sources */,
+				A7A74C4B2A28C1A3001CC065 /* DownloadEventEmitter.swift in Sources */,
+				A7A74C412A28C0F0001CC065 /* Stream.swift in Sources */,
+				A7A74C472A28C15B001CC065 /* CacheVideoModule.m in Sources */,
 				D1107C102110259000073188 /* RCTVideoPlayerViewController.m in Sources */,
+				A7A74C3E2A28C052001CC065 /* Asset.swift in Sources */,
 				D1107C0E2110259000073188 /* RCTVideoManager.m in Sources */,
 				D1107C0C2110259000073188 /* RCTVideo.m in Sources */,
 			);
@@ -297,30 +312,39 @@
 		58B511F01A9E6C8500147676 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(SRCROOT)/Vendor/SPTPersistentCache/include/**",
 				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = RCTVideo;
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "RCTVideo-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
 		58B511F11A9E6C8500147676 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(SRCROOT)/Vendor/SPTPersistentCache/include/**",
 				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = RCTVideo;
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "RCTVideo-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
