@@ -41,6 +41,14 @@
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libRCTVideo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRCTVideo.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		641E28441F0EEC8500443AF6 /* libRCTVideo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRCTVideo.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7A74C052A289B50001CC065 /* Asset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Asset.swift; sourceTree = "<group>"; };
+		A7A74C062A289B7F001CC065 /* react-native-video-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "react-native-video-Bridging-Header.h"; sourceTree = "<group>"; };
+		A7A74C072A289BAA001CC065 /* AssetPersistenceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetPersistenceManager.swift; sourceTree = "<group>"; };
+		A7A74C082A289BD7001CC065 /* CacheVideoModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheVideoModule.swift; sourceTree = "<group>"; };
+		A7A74C092A289BFA001CC065 /* CacheVideoModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CacheVideoModule.m; sourceTree = "<group>"; };
+		A7A74C0A2A289C19001CC065 /* DownloadEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadEventEmitter.swift; sourceTree = "<group>"; };
+		A7A74C0B2A289C34001CC065 /* DownloadEventEmitter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DownloadEventEmitter.m; sourceTree = "<group>"; };
+		A7A74C0C2A289CFE001CC065 /* Stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stream.swift; sourceTree = "<group>"; };
 		D1107C012110259000073188 /* RCTVideoPlayerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCTVideoPlayerViewController.h; path = Video/RCTVideoPlayerViewController.h; sourceTree = "<group>"; };
 		D1107C022110259000073188 /* RCTVideoPlayerViewControllerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RCTVideoPlayerViewControllerDelegate.h; path = Video/RCTVideoPlayerViewControllerDelegate.h; sourceTree = "<group>"; };
 		D1107C032110259000073188 /* UIView+FindUIViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIView+FindUIViewController.m"; path = "Video/UIView+FindUIViewController.m"; sourceTree = "<group>"; };
@@ -88,6 +96,14 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				A7A74C0C2A289CFE001CC065 /* Stream.swift */,
+				A7A74C0B2A289C34001CC065 /* DownloadEventEmitter.m */,
+				A7A74C0A2A289C19001CC065 /* DownloadEventEmitter.swift */,
+				A7A74C092A289BFA001CC065 /* CacheVideoModule.m */,
+				A7A74C082A289BD7001CC065 /* CacheVideoModule.swift */,
+				A7A74C072A289BAA001CC065 /* AssetPersistenceManager.swift */,
+				A7A74C062A289B7F001CC065 /* react-native-video-Bridging-Header.h */,
+				A7A74C052A289B50001CC065 /* Asset.swift */,
 				D1107C072110259000073188 /* RCTVideo.h */,
 				D1107C052110259000073188 /* RCTVideo.m */,
 				D1107C092110259000073188 /* RCTVideoManager.h */,
@@ -163,6 +179,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 58B511D21A9E6C8500147676;
