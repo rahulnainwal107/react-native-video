@@ -62,6 +62,7 @@ static int const RCTVideoUnset = -1;
 
   BOOL _automaticallyWaitsToMinimizeStalling;
   BOOL _muted;
+  BOOL _playOffline;
   BOOL _paused;
   BOOL _repeat;
   BOOL _allowsExternalPlayback;
@@ -495,6 +496,7 @@ static int const RCTVideoUnset = -1;
 - (void)playerItemForSource:(NSDictionary *)source withCallback:(void(^)(AVPlayerItem *))handler
 {
   bool isNetwork = [RCTConvert BOOL:[source objectForKey:@"isNetwork"]];
+  bool playOffline = [RCTConvert BOOL:[source objectForKey:@"playOffline"]];
   bool isAsset = [RCTConvert BOOL:[source objectForKey:@"isAsset"]];
   bool shouldCache = [RCTConvert BOOL:[source objectForKey:@"shouldCache"]];
   NSString *uri = [source objectForKey:@"uri"];
@@ -504,13 +506,39 @@ static int const RCTVideoUnset = -1;
     DebugLog(@"Could not find video URL in source '%@'", source);
     return;
   }
-  
+    NSString *resourcePath = [[NSBundle mainBundle] pathForResource:uri ofType:type];
+    NSString *path = resourcePath ? resourcePath : @"";
   NSURL *url = isNetwork || isAsset
     ? [NSURL URLWithString:uri]
-    : [[NSURL alloc] initFileURLWithPath:[[NSBundle mainBundle] pathForResource:uri ofType:type]];
+    : path;
   NSMutableDictionary *assetOptions = [[NSMutableDictionary alloc] init];
-  
-  if (isNetwork) {
+    if (playOffline) {
+        NSLog(@"Something To Print from playOffline");
+        NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+        NSData *localFileLocation = [userDefaults objectForKey:uri];
+        if (![localFileLocation isKindOfClass:[NSData class]]) {
+            return;
+        }
+        BOOL bookmarkDataIsStale = NO;
+        NSError *error = nil;
+        NSURL *url = [NSURL URLByResolvingBookmarkData:localFileLocation
+                                              options:NSURLBookmarkResolutionWithoutUI
+                                        relativeToURL:nil
+                                  bookmarkDataIsStale:&bookmarkDataIsStale
+                                                error:&error];
+        
+        if (error) {
+            NSLog(@"Failed to create URL from bookmark with error: %@", error);
+            return;
+        }
+
+        if (bookmarkDataIsStale) {
+            NSLog(@"Bookmark data is stale!");
+            return;
+        }
+
+        asset = [AVURLAsset URLAssetWithURL:url options:nil];
+  }else if (isNetwork) {
     NSDictionary *headers = [source objectForKey:@"requestHeaders"];
     if ([headers count] > 0) {
       [assetOptions setObject:headers forKey:@"AVURLAssetHTTPHeaderFieldsKey"];
@@ -1015,6 +1043,11 @@ static int const RCTVideoUnset = -1;
 {
   _muted = muted;
   [self applyModifiers];
+}
+
+- (void)setPlayOffline:(BOOL)playOffline
+{
+  _playOffline = playOffline;
 }
 
 - (void)setVolume:(float)volume

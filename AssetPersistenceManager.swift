@@ -71,8 +71,7 @@ import AVFoundation
 
     /// Triggers the initial AVAssetDownloadTask for a given Asset.
     /// - Tag: DownloadStream
-    func downloadStream(for asset: Asset) {
-
+    func downloadStream(for asset: Asset) {print("___ DDD ___ ")
         // Get the default media selections for the asset's media selection groups.
         let preferredMediaSelection = asset.urlAsset.preferredMediaSelection
 
@@ -353,7 +352,7 @@ extension AssetPersistenceManager: AVAssetDownloadDelegate {
             percentComplete +=
                 loadedTimeRange.duration.seconds / timeRangeExpectedToLoad.duration.seconds
         }
-
+print("percentComplete ",percentComplete)
         var userInfo = [String: Any]()
         userInfo[Asset.Keys.name] = asset.stream.name
         userInfo[Asset.Keys.percentDownloaded] = percentComplete
