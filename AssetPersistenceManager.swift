@@ -92,10 +92,11 @@ import AVFoundation
 
         // To better track the AVAssetDownloadTask, set the taskDescription to something unique for the sample.
         task.taskDescription = asset.stream.name
-
+        let allTasks = activeDownloadsMap.count;
         activeDownloadsMap[task] = asset
-
-        task.resume()
+        if (allTasks == 0 ){
+            task.resume()
+        }
 
         var userInfo = [String: Any]()
         userInfo[Asset.Keys.name] = asset.stream.name
@@ -253,7 +254,13 @@ extension AssetPersistenceManager: AVAssetDownloadDelegate {
             let asset = activeDownloadsMap.removeValue(forKey: task) else { return }
 
         guard let downloadURL = willDownloadToUrlMap.removeValue(forKey: task) else { return }
-
+        DownloadEventEmitter.emitter.sendEvent(withName: "DOWNLOAD_COMPLETED", body: ["id": asset.stream.playlistURL])
+        if(activeDownloadsMap.count != 0){
+            for assetDownloadTask in activeDownloadsMap.keys {
+                assetDownloadTask.resume();
+                break;
+            }
+        }
         // Prepare the basic userInfo dictionary that will be posted as part of our notification.
         var userInfo = [String: Any]()
         userInfo[Asset.Keys.name] = asset.stream.name
@@ -323,7 +330,6 @@ extension AssetPersistenceManager: AVAssetDownloadDelegate {
          */
 
         guard let asset = activeDownloadsMap[aggregateAssetDownloadTask] else { return }
-        DownloadEventEmitter.emitter.sendEvent(withName: "DOWNLOAD_COMPLETED", body: ["id": asset.stream.playlistURL])
         // Prepare the basic userInfo dictionary that will be posted as part of our notification.
         var userInfo = [String: Any]()
         userInfo[Asset.Keys.name] = asset.stream.name
