@@ -11,6 +11,7 @@ import Foundation
 import AVFoundation
 
 /// - Tag: AssetPersistenceManager
+@available(iOS 11.0, *)
 @objc class AssetPersistenceManager: NSObject {
     // MARK: Properties
 
@@ -139,7 +140,7 @@ import AVFoundation
                 fatalError("Bookmark data is stale!")
             }
             
-            let urlAsset = AVURLAsset(url: url)
+            let urlAsset = AVURLAsset(url: url!)
             //let stream = StreamListManager.shared.stream(withName: name)
             let asse = Asset(stream: Stream(name: "Dummy Name", playlistURL: name), urlAsset: AVURLAsset(url: URL(string: name)!))
             
@@ -207,6 +208,7 @@ import AVFoundation
 }
 
 /// Return the display names for the media selection options that are currently selected in the specified group
+@available(iOS 9.0, *)
 func displayNamesForSelectedMediaOptions(_ mediaSelection: AVMediaSelection) -> String {
 
     var displayNames = ""
@@ -240,6 +242,7 @@ func displayNamesForSelectedMediaOptions(_ mediaSelection: AVMediaSelection) -> 
 /**
  Extend `AssetPersistenceManager` to conform to the `AVAssetDownloadDelegate` protocol.
  */
+@available(iOS 11.0, *)
 extension AssetPersistenceManager: AVAssetDownloadDelegate {
 
     /// Tells the delegate that the task finished transferring data.

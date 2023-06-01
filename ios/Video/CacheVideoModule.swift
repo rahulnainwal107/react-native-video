@@ -7,7 +7,8 @@ import UIKit
         @objc public func createCacheVideoModule(_ param:String){
             print("Inputs from user ",param);
       }
-        @objc public func downloadVideoUsingUri(
+    @available(iOS 11.0, *)
+    @objc public func downloadVideoUsingUri(
           _ param: String
         ) -> Void {
             print("Calling downloadVideoUsingUri with URL ",param);
@@ -16,7 +17,8 @@ import UIKit
             AssetPersistenceManager.sharedManager.downloadStream(for: asset);
             //AssetListManager.sharedManager.assets.append(asset);
         }
-        @objc(isVideoAvailableForOffline:resolver:rejecter:) public func isVideoAvailableForOffline(
+    @available(iOS 11.0, *)
+    @objc(isVideoAvailableForOffline:resolver:rejecter:) public func isVideoAvailableForOffline(
           _ param: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock
         ) -> Void {
             print("Calling isVideoAvailableForOffline with URL ",param);
@@ -62,6 +64,7 @@ import UIKit
         @objc public func downloadManagerEmitter() -> Void {
             print("Calling downloadManagerEmitter ");
         }
+    @available(iOS 11.0, *)
     @objc public func restorePersistenceManager()->Void{
         print("Calling restorePersistenceManager ");
         AssetPersistenceManager.sharedManager.restorePersistenceManager()
