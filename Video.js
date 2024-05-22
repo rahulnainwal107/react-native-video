@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { StyleSheet, requireNativeComponent, NativeModules, View, ViewPropTypes, Image, Platform, findNodeHandle,NativeEventEmitter } from 'react-native';
+import { StyleSheet, requireNativeComponent, NativeModules, View, Image, Platform, findNodeHandle,NativeEventEmitter } from 'react-native';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import TextTrackType from './TextTrackType';
 import FilterType from './FilterType';
 import DRMType from './DRMType';
 import VideoResizeMode from './VideoResizeMode.js';
+import {ImagePropTypes, ViewPropTypes } from 'deprecated-react-native-prop-types';
 
 const styles = StyleSheet.create({
   base: {
@@ -423,7 +424,7 @@ Video.propTypes = {
   maxBitRate: PropTypes.number,
   resizeMode: PropTypes.string,
   poster: PropTypes.string,
-  posterResizeMode: Image.propTypes.resizeMode,
+  posterResizeMode: ImagePropTypes.resizeMode,
   repeat: PropTypes.bool,
   automaticallyWaitsToMinimizeStalling: PropTypes.bool,
   allowsExternalPlayback: PropTypes.bool,
