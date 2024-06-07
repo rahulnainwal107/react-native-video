@@ -5,6 +5,9 @@
 RCT_EXTERN_METHOD(isVideoAvailableForOffline:(NSString *)param
                    resolver:(RCTPromiseResolveBlock)resolve
                    rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(removeDownloadVideo:(NSString *)param
+                   resolver:(RCTPromiseResolveBlock)resolve
+                   rejecter:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(downloadVideoUsingUri:(NSString *)param)
 RCT_EXTERN_METHOD(removeAllDownloads)
 RCT_EXTERN_METHOD(downloadManagerEmitter)

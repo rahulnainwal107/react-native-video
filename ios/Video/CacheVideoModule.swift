@@ -29,6 +29,14 @@ import UIKit
             }
             
         }
+        @objc(removeDownloadVideo:resolver:rejecter:) public func removeDownloadVideo(
+          _ param: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock
+        ) -> Void {
+            print("Calling removeDownloadVideo with URL ",param);
+            let asset = Asset(stream: Stream(name: param, playlistURL: param), urlAsset: AVURLAsset(url: URL(string: param)!))
+            AssetPersistenceManager.sharedManager.deleteAsset(asset);
+            return resolve(true);
+        }
         @objc public func removeAllDownloads() -> Void {
             print("Calling removeAllDownloads ");
 //            let cachePath = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)[0]
