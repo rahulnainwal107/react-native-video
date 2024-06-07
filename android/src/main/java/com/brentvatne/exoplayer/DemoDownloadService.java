@@ -125,6 +125,7 @@ public class DemoDownloadService extends DownloadService {
       Log.d("DOWNLOAD_STATE ",""+download);
 
       Log.d("Completed percentage ",""+download.getPercentDownloaded());
+      WritableMap params = Arguments.createMap();
       if (!isStart) {
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -146,7 +147,6 @@ public class DemoDownloadService extends DownloadService {
         }, 0, 2000);
         isStart = true;
       }
-      WritableMap params = Arguments.createMap();
       if (download.state == Download.STATE_COMPLETED) {
         notification =
             notificationHelper.buildDownloadCompletedNotification(
