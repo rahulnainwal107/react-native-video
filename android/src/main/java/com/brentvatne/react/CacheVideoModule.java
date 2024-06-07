@@ -103,6 +103,18 @@ public class CacheVideoModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void removeDownloadVideo(String videoUri, Promise promise){
+        try {
+            DownloadManager downloadManager = DemoUtil.getDownloadManager(context);
+            downloadManager.removeDownload(videoUri);
+            Log.d("Video deleted ", videoUri);
+            promise.resolve(true);
+        } catch (Exception e) {
+            promise.reject("ERROR_CODE");
+        }
+    }
+
+    @ReactMethod
     public void getAbsolutePath(String uri){
 //       DataSource.Factory downloadTracker = DemoUtil.getHttpDataSourceFactory(/* context= */ context);
 //       MediaSource videoSource = new ProgressiveMediaSource.Factory(downloadTracker).createMediaSource(MediaItem.fromUri(uri));
