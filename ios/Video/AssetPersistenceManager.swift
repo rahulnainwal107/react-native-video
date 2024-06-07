@@ -359,6 +359,7 @@ extension AssetPersistenceManager: AVAssetDownloadDelegate {
                 loadedTimeRange.duration.seconds / timeRangeExpectedToLoad.duration.seconds
         }
 print("percentComplete ",percentComplete)
+        DownloadEventEmitter.emitter.sendEvent(withName: "DOWNLOADING", body: ["id": asset.stream.playlistURL, "progress": percentComplete])
         var userInfo = [String: Any]()
         userInfo[Asset.Keys.name] = asset.stream.name
         userInfo[Asset.Keys.percentDownloaded] = percentComplete
