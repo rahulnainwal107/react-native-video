@@ -36,7 +36,8 @@ import com.google.android.exoplayer2.util.Log;
 import com.google.android.exoplayer2.util.NotificationUtil;
 import com.google.android.exoplayer2.util.Util;
 import java.util.List;
-
+import java.util.Timer;
+import java.util.TimerTask;
 /** A service for downloading media. */
 public class DemoDownloadService extends DownloadService {
 
@@ -93,6 +94,19 @@ public class DemoDownloadService extends DownloadService {
 
     private final Context context;
     private final DownloadNotificationHelper notificationHelper;
+    private Timer timer;
+    private boolean isStart;
+
+    private static final String TAG = "MainActivity";
+
+    private void stopTrackingProgressChanged() {
+      if (isStart) {
+        timer.purge();
+        timer.cancel();
+        isStart = false;
+        timer = null;
+      }
+    }
 
     private int nextNotificationId;
 
@@ -101,6 +115,7 @@ public class DemoDownloadService extends DownloadService {
       this.context = context.getApplicationContext();
       this.notificationHelper = notificationHelper;
       nextNotificationId = firstNotificationId;
+      this.timer = new Timer();
     }
 
     @Override
@@ -110,6 +125,27 @@ public class DemoDownloadService extends DownloadService {
       Log.d("DOWNLOAD_STATE ",""+download);
 
       Log.d("Completed percentage ",""+download.getPercentDownloaded());
+      if (!isStart) {
+        timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+          @Override
+          public void run() {
+            if (downloadManager != null) {
+              List<Download> currentDownloads = downloadManager.getCurrentDownloads();
+              if (currentDownloads.isEmpty()) {
+                stopTrackingProgressChanged();
+              } else {
+                for (Download download : currentDownloads) {
+                  Log.d(TAG, "On download changed of " + download.request.id + " has progress " + download.getPercentDownloaded());
+                  params.putDouble("progress", download.getPercentDownloaded());
+                  CacheVideoModule.downloadEvent("DOWNLOADING", params.copy());
+                }
+              }
+            }
+          }
+        }, 0, 2000);
+        isStart = true;
+      }
       WritableMap params = Arguments.createMap();
       if (download.state == Download.STATE_COMPLETED) {
         notification =
@@ -129,24 +165,24 @@ public class DemoDownloadService extends DownloadService {
                 /* contentIntent= */ null,
                 Util.fromUtf8Bytes(download.request.data));
         params.putString("id", download.request.id);
-        CacheVideoModule.downloadEvent("DOWNLOAD_FAILED", params);
+        CacheVideoModule.downloadEvent("DOWNLOAD_FAILED", params.copy());
         NotificationUtil.setNotification(context, nextNotificationId++, notification);
       } else if (download.state == Download.STATE_QUEUED) {
         params.putString("id", download.request.id);
-        CacheVideoModule.downloadEvent("DOWNLOAD_QUEUED", params);
+        CacheVideoModule.downloadEvent("DOWNLOAD_QUEUED", params.copy());
       } else if (download.state == Download.STATE_STOPPED) {
         params.putString("id", download.request.id);
-        CacheVideoModule.downloadEvent("DOWNLOAD_STOPPED", params);
+        CacheVideoModule.downloadEvent("DOWNLOAD_STOPPED", params.copy());
       }else if (download.state == Download.STATE_DOWNLOADING) {
-        params.putString("id", download.request.id);
-        CacheVideoModule.downloadEvent("DOWNLOADING", params);
+//        params.putString("id", download.request.id);
+//        CacheVideoModule.downloadEvent("DOWNLOADING", params);
       }else if (download.state == Download.STATE_REMOVING) {
         params.putString("id", download.request.id);
-        CacheVideoModule.downloadEvent("DOWNLOAD_REMOVING", params);
+        CacheVideoModule.downloadEvent("DOWNLOAD_REMOVING", params.copy());
       }else {
         Log.d("DOWNLOAD_STATE_ELSE ",""+download);
         params.putString("id", download.request.id);
-        CacheVideoModule.downloadEvent("DOWNLOAD_RESTARTING", params);
+        CacheVideoModule.downloadEvent("DOWNLOAD_RESTARTING", params.copy());
         return;
       }
       //NotificationUtil.setNotification(context, nextNotificationId++, notification);
