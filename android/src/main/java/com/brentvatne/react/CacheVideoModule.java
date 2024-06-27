@@ -103,11 +103,36 @@ public class CacheVideoModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void downloadStateUri(String videoUri, Promise promise){
+        Log.d("downloadStateUri function called  ","");
+        try {
+            DownloadTracker downloadTracker = DemoUtil.getDownloadTracker(/* context= */ context);
+            String downloadStateValue = downloadTracker.videoDownloadState(MediaItem.fromUri(videoUri));
+            Log.d("downloadStateValue ",""+downloadStateValue);
+            promise.resolve(downloadStateValue);
+        } catch (Exception e) {
+            promise.reject("ERROR_CODE");
+        }
+    }
+
+    @ReactMethod
     public void removeDownloadVideo(String videoUri, Promise promise){
         try {
             DownloadManager downloadManager = DemoUtil.getDownloadManager(context);
             downloadManager.removeDownload(videoUri);
             Log.d("Video deleted ", videoUri);
+            promise.resolve(true);
+        } catch (Exception e) {
+            promise.reject("ERROR_CODE");
+        }
+    }
+
+    @ReactMethod
+    public void cancelDownloadingVideoUri(String videoUri, Promise promise){
+        try {
+            DownloadManager downloadManager = DemoUtil.getDownloadManager(context);
+            downloadManager.removeDownload(videoUri);
+            Log.d("Video cancel ", videoUri);
             promise.resolve(true);
         } catch (Exception e) {
             promise.reject("ERROR_CODE");

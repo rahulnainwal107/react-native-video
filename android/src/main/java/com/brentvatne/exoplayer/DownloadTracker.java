@@ -98,6 +98,28 @@ public class DownloadTracker {
     return download != null && download.state != Download.STATE_FAILED;
   }
 
+  public String videoDownloadState(MediaItem mediaItem) {
+    @Nullable Download download = downloads.get(checkNotNull(mediaItem.localConfiguration).uri);
+
+    if (download == null) {
+      return "DOWNLOAD_NOT_FOUND";
+    }
+    switch (download.state) {
+      case Download.STATE_DOWNLOADING:
+        return "downloading";
+      case Download.STATE_COMPLETED:
+        return "downloaded";
+      case Download.STATE_FAILED:
+        return "FAILED";
+      case Download.STATE_QUEUED:
+        return "QUEUED";
+      case Download.STATE_STOPPED:
+        return "STOPPED";
+      default:
+        return "UNKNOWN_STATE";
+    }
+  }
+
   @Nullable
   public DownloadRequest getDownloadRequest(Uri uri) {
     @Nullable Download download = downloads.get(uri);
