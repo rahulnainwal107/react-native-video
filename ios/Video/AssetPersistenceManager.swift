@@ -196,12 +196,10 @@ import AVFoundation
     /// - Tag: CancelDownload
     func cancelDownload(for asset: Asset) {
         var task: AVAggregateAssetDownloadTask?
-
-//        for (taskKey, assetVal) in activeDownloadsMap where asset == assetVal {
-//            task = taskKey
-//            break
-//        }
-
+        for (taskKey, assetVal) in activeDownloadsMap where asset.stream.name == assetVal.stream.name {
+            task = taskKey
+            break
+        }
         task?.cancel()
     }
 }

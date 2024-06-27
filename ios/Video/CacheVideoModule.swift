@@ -29,6 +29,25 @@ import UIKit
             }
             
         }
+        @objc(cancelDownloadingVideoUri:resolver:rejecter:) public func cancelDownloadingVideoUri(
+          _ param: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock
+        ) -> Void {
+            print("Calling cancelDownloadingVideoUri with URL ",param);
+            let asset = Asset(stream: Stream(name: param, playlistURL: param), urlAsset: AVURLAsset(url: URL(string: param)!))
+            AssetPersistenceManager.sharedManager.cancelDownload(for: asset);
+            print("Calling cancelDownloadingVideoUri with downloadState:: ");
+           return resolve(true)
+            
+        }
+        @objc(downloadStateUri:resolver:rejecter:) public func downloadStateUri(
+          _ param: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock
+        ) -> Void {
+            print("Calling downloadStateUri with URL ",param);
+            let asset = Asset(stream: Stream(name: param, playlistURL: param), urlAsset: AVURLAsset(url: URL(string: param)!))
+            let downloadState = AssetPersistenceManager.sharedManager.downloadState(for: asset);
+            return resolve(downloadState.rawValue);
+            
+        }
         @objc(removeDownloadVideo:resolver:rejecter:) public func removeDownloadVideo(
           _ param: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock
         ) -> Void {
