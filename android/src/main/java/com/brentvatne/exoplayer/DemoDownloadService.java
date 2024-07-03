@@ -138,8 +138,12 @@ public class DemoDownloadService extends DownloadService {
               } else {
                 for (Download download : currentDownloads) {
                   Log.d(TAG, "On download changed of " + download.request.id + " has progress " + download.getPercentDownloaded());
-                  params.putDouble("progress", download.getPercentDownloaded());
-                  CacheVideoModule.downloadEvent("DOWNLOADING", params.copy());
+                  if(download.getPercentDownloaded()>0){
+                    params.putString("id", download.request.id);
+                    params.putDouble("progress", download.getPercentDownloaded());
+                    android.util.Log.d(TAG, "params while downloading: " + params);
+                    CacheVideoModule.downloadEvent("DOWNLOADING", params.copy());
+                  }
                 }
               }
             }
