@@ -156,6 +156,7 @@ public final class DemoUtil {
               getDownloadCache(context),
               getHttpDataSourceFactory(context),
               Executors.newFixedThreadPool(/* nThreads= */ 6));
+      downloadManager.setMaxParallelDownloads(1);
       downloadTracker =
           new DownloadTracker(context, getHttpDataSourceFactory(context), downloadManager);
     }
