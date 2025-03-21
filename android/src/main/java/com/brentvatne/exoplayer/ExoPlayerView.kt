@@ -120,16 +120,16 @@ class ExoPlayerView(private val context: Context) :
     }
 
     /*
- *  Custom Subtitle Changes
- * Date Patch: DD MMM YYYY
- * Author: Janmejay Singh
- */
+     * Author: Rohan Kumar Singh
+     * Date: 10 March 2025
+     * Issue: ASTF-8087: #INC-815073 | Subtitle getting crop on full screen
+     * */
     fun setSubtitleStyle(style: SubtitleStyle) {
         // Ensure we reset subtitle style before reapplying it
         val typeface = Typeface.create("roboto", Typeface.NORMAL)
 
         val textSizeInSp = convertPxToSp(18f, context)
-        val paddingBottomInDp = convertPxToDpInt(48f, context)
+        val paddingBottomInDp = style.paddingBottom;
 
         // Create a custom CaptionStyleCompat
         val customStyle = CaptionStyleCompat(

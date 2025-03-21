@@ -55,7 +55,7 @@ class DRMManager(private val dataSourceFactory: HttpDataSource.Factory) : DRMMan
                 .setUuidAndExoMediaDrmProvider(uuid) { mediaDrm }
                 .setKeyRequestParameters(null)
                 .setMultiSession(drmProps.multiDrm)
-                // .setLoadErrorHandlingPolicy(new CustomLoadErrorHandlingPolicy())
+                 .setLoadErrorHandlingPolicy( CustomLoadErrorHandlingPolicy())
                 .build(drmCallback)
         } catch (ex: UnsupportedDrmException) {
             hasDrmFailed = true

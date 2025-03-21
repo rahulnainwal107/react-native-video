@@ -300,6 +300,7 @@ public class ReactExoplayerView extends FrameLayout implements
 //    private long playerInitTime;
 //    private boolean enableConvivaVideoAnalytics;
 //    private Map<String, Object> convivaContentInfo;
+    private long playerReleaseTimeoutMs;
 
     // Reload Player
     private ArrayList<Integer> retryErrorCodes = new ArrayList<>();
@@ -991,6 +992,7 @@ public class ReactExoplayerView extends FrameLayout implements
                 .setBandwidthMeter(customInitialBandwidth) // Before there was bandwidthMeter
                 .setLoadControl(loadControl)
                 .setMediaSourceFactory(mediaSourceFactory)
+                .setReleaseTimeoutMs(playerReleaseTimeoutMs)
                 .build();
 //        initConvivaAnalyticsSession(adsLoader);
         ReactNativeVideoManager.Companion.getInstance().onInstanceCreated(instanceId, player);
@@ -1151,6 +1153,9 @@ public class ReactExoplayerView extends FrameLayout implements
     private DrmSessionManager initializePlayerDrm() {
         DrmSessionManager drmSessionManager = null;
         DRMProps drmProps = source.getDrmProps();
+        if(drmProps != null && drmProps.getDrmType() == null){
+            drmProps.setDrmType("widevine");
+        }
         // need to realign UUID in DRM Props from source
         if (drmProps != null && drmProps.getDrmType() != null) {
             UUID uuid = Util.getDrmUuid(drmProps.getDrmType());
@@ -1427,12 +1432,13 @@ public class ReactExoplayerView extends FrameLayout implements
 
             updateResumePosition();
             /*
-             * Author: Rohan Kumar Singh
-             * Date: 23 Jan 2025
+             * Author: Rohan Kumar Singh -> Rahul Nainwal
+             * Date: 23 Jan 2025 -> 20 Feb 2025
              * Issue: [1003]: ERROR_CODE_TIMEOUT - androidx.media3.exoplayer.ExoTimeoutException: Detaching surface timed out. - Unexpected runtime error
              * */
-            player.setVideoSurface(null);
+            player.setPlayWhenReady(false);
             player.stop();
+            player.clearMediaItems();
             player.release();
             player.removeListener(this);
             PictureInPictureUtil.applyAutoEnterEnabled(themedReactContext, pictureInPictureParamsBuilder, false);
@@ -2027,6 +2033,8 @@ public class ReactExoplayerView extends FrameLayout implements
             case PlaybackException.ERROR_CODE_DECODER_QUERY_FAILED:
             case PlaybackException.ERROR_CODE_DRM_SCHEME_UNSUPPORTED:
             case PlaybackException.ERROR_CODE_DECODING_FORMAT_EXCEEDS_CAPABILITIES:
+            case PlaybackException.ERROR_CODE_DRM_SYSTEM_ERROR:
+            case PlaybackException.ERROR_CODE_DRM_UNSPECIFIED:
                 // Codec - Patch
                 var bufferConfig = new BufferConfig();
                 if (bufferConfig.getLive().isLiveConfigured()) {
@@ -2042,8 +2050,13 @@ public class ReactExoplayerView extends FrameLayout implements
                         adsLoader.release();
                     }
                 }
-                if (localRetryCount > 3) {
-                    eventEmitter.onVideoError.invoke(errorString, e, errorCode);
+                localRetryCount = localRetryCount + 1;
+                if (localRetryCount >= 3) {
+                    if((PlaybackException.ERROR_CODE_UNSPECIFIED==e.errorCode) || (PlaybackException.ERROR_CODE_DRM_SYSTEM_ERROR==e.errorCode) || (PlaybackException.ERROR_CODE_DRM_UNSPECIFIED==e.errorCode) ){
+                        eventEmitter.onVideoError.invoke("", e, PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT+"");
+                    }else{
+                        eventEmitter.onVideoError.invoke(errorString, e, errorCode);
+                    }
                     playerNeedsSource = true;
                     if (isBehindLiveWindow(e)) {
                         clearResumePosition();
@@ -2053,7 +2066,6 @@ public class ReactExoplayerView extends FrameLayout implements
                     }
                     return;
                 }
-                localRetryCount = localRetryCount + 1;
                 resumePositionLocal = Math.max(0, player.getCurrentPosition());
                 /*
                  * Error Handling
@@ -2070,18 +2082,27 @@ public class ReactExoplayerView extends FrameLayout implements
                 player.stop();
                 player.clearMediaItems();
                 playerNeedsSource = true;
-                releasePlayer();
-                initializePlayer();
+//                releasePlayer();
+//                initializePlayer();
+                /*
+                 * Author: Kaushal Gupta
+                 * Date: 27 Feb 2025
+                 * Issue:4001 - Caused by a decoder initialization failure.
+                 * */
+
+                if (PlaybackException.ERROR_CODE_DECODER_INIT_FAILED == e.errorCode && localRetryCount == 1) {
+                    releasePlayer();
+                    initializePlayer();
+                }
+                reloadSource();
                 setPlayWhenReady(true);
                 return;
             case PlaybackException.ERROR_CODE_DRM_DEVICE_REVOKED:
             case PlaybackException.ERROR_CODE_DRM_LICENSE_ACQUISITION_FAILED:
             case PlaybackException.ERROR_CODE_DRM_PROVISIONING_FAILED:
-            case PlaybackException.ERROR_CODE_DRM_SYSTEM_ERROR:
-            case PlaybackException.ERROR_CODE_DRM_UNSPECIFIED:
                 if (!hasDrmFailed) {
                     // When DRM fails to reach the app level certificate server it will fail with a source error so we assume that it is DRM related and try one more time
-                    hasDrmFailed = true;
+                     hasDrmFailed = true;
                     /*
                      * ACL-2221 Changes
                      * Date Patch: 13 Nov 2024
@@ -2206,6 +2227,11 @@ public class ReactExoplayerView extends FrameLayout implements
 
     public void setReportBandwidth(boolean reportBandwidth) {
         mReportBandwidth = reportBandwidth;
+    }
+
+    private void reloadSource() {
+        playerNeedsSource = true;
+        initializePlayer();
     }
 
     public void setResizeModeModifier(@ResizeMode.Mode int resizeMode) {
@@ -2967,4 +2993,11 @@ public class ReactExoplayerView extends FrameLayout implements
     }
 
     /* End of Network Detection - (ALC-3097)  */
+
+    /**
+     * playerReleaseTimeoutMs
+     */
+    public void setPlayerReleaseTimeoutMs(double _playerReleaseTimeoutMs) {
+        playerReleaseTimeoutMs = (long)_playerReleaseTimeoutMs;
+    }
 }
