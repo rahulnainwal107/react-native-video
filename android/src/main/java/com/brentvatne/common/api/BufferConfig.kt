@@ -47,6 +47,19 @@ class BufferConfig {
         var minOffsetMs: Long = BufferConfigPropUnsetInt.toLong()
         var targetOffsetMs: Long = BufferConfigPropUnsetInt.toLong()
 
+        /*
+        * This is to check, if we have Live Configuration enabled or not.
+        * Date Patch: 17 Oct 2024
+        * Author: Rohan Kumar Singh
+        * */
+        fun isLiveConfigured(): Boolean {
+            return maxPlaybackSpeed != BufferConfigPropUnsetDouble.toFloat() ||
+                minPlaybackSpeed != BufferConfigPropUnsetDouble.toFloat() ||
+                maxOffsetMs != BufferConfigPropUnsetInt.toLong() ||
+                minOffsetMs != BufferConfigPropUnsetInt.toLong() ||
+                targetOffsetMs != BufferConfigPropUnsetInt.toLong()
+        }
+
         override fun equals(other: Any?): Boolean {
             if (other == null || other !is Live) return false
             return (

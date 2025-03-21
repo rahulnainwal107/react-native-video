@@ -1,5 +1,7 @@
 package com.brentvatne.common.react
 
+import androidx.media3.datasource.HttpDataSource
+import androidx.media3.exoplayer.drm.DrmSession
 import com.brentvatne.common.api.TimedMetadata
 import com.brentvatne.common.api.Track
 import com.brentvatne.common.api.VideoTrack
@@ -13,6 +15,7 @@ import com.facebook.react.uimanager.events.Event
 import com.facebook.react.uimanager.events.EventDispatcher
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.nio.charset.StandardCharsets
 
 enum class EventTypes(val eventName: String) {
     EVENT_LOAD_START("onVideoLoadStart"),
@@ -127,6 +130,21 @@ class VideoEventEmitter {
             }
             onVideoError = { errorString, exception, errorCode ->
                 event.dispatch(EventTypes.EVENT_ERROR) {
+                    val failureResponse = run {
+                        val cause = exception.cause
+                        if (cause is DrmSession.DrmSessionException) {
+                            val drmError = cause as DrmSession.DrmSessionException
+                            val drmCause = drmError.cause
+                            if (drmCause?.cause is HttpDataSource.InvalidResponseCodeException) {
+                                val invalidResponseCodeException = drmCause.cause as HttpDataSource.InvalidResponseCodeException
+                                // Get the response body if available
+                                invalidResponseCodeException.responseBody?.let {
+                                    return@run String(it, StandardCharsets.UTF_8)
+                                }
+                            }
+                        }
+                        null
+                    }
                     putMap(
                         "error",
                         Arguments.createMap().apply {
@@ -140,6 +158,10 @@ class VideoEventEmitter {
                             putString("errorException", exception.toString())
                             putString("errorCode", errorCode)
                             putString("errorStackTrace", stackTrace)
+                            // Add failureResponse if available
+                            failureResponse?.let {
+                                putString("failureResponse", it)
+                            }
                         }
                     )
                 }

@@ -1,5 +1,6 @@
 package com.brentvatne.react
 
+import android.os.Build
 import com.brentvatne.common.api.Source
 import com.brentvatne.exoplayer.ReactExoplayerView
 import com.facebook.react.bridge.Promise
@@ -90,6 +91,18 @@ class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextB
     fun getCurrentPosition(reactTag: Int, promise: Promise) {
         performOnPlayerView(reactTag) {
             it?.getCurrentPosition(promise)
+        }
+    }
+
+    /*
+    * Player - Multi Player Instance Fix
+    * Date Patch: 10 Dec 2024
+    * Author: Kaushal Gupta
+    * */
+    @ReactMethod
+    fun destroyPlayer(reactTag: Int) {
+        performOnPlayerView(reactTag) {
+            it?.releaseExoPlayer();
         }
     }
 

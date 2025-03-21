@@ -6,6 +6,7 @@ import com.brentvatne.common.toolbox.ReactBridgeUtils.safeGetString
 import com.facebook.react.bridge.ReadableMap
 import java.util.UUID
 
+
 /**
  * Class representing DRM props for host.
  * Only generic code here, no reference to the player.
@@ -68,8 +69,12 @@ class DRMProps {
                         val drmKeyRequestPropertiesList = ArrayList<String?>()
                         for (i in 0 until drmHeadersArray.size()) {
                             val current = drmHeadersArray.getMap(i)
-                            drmKeyRequestPropertiesList.add(safeGetString(current, PROP_DRM_HEADERS_KEY))
-                            drmKeyRequestPropertiesList.add(safeGetString(current, PROP_DRM_HEADERS_VALUE))
+                            val key = if (current!!.hasKey(PROP_DRM_HEADERS_KEY)) current!!.getString(PROP_DRM_HEADERS_KEY) else null
+                            val value = if (current!!.hasKey(PROP_DRM_HEADERS_VALUE)) current!!.getString(PROP_DRM_HEADERS_VALUE) else null
+                            if(!value.equals("")) {
+                                drmKeyRequestPropertiesList.add(safeGetString(current, PROP_DRM_HEADERS_KEY))
+                                drmKeyRequestPropertiesList.add(safeGetString(current, PROP_DRM_HEADERS_VALUE))
+                            }
                         }
                         val array = emptyArray<String>()
                         drm.drmLicenseHeader = drmKeyRequestPropertiesList.toArray(array)

@@ -2,6 +2,7 @@ package com.brentvatne.exoplayer
 
 import android.graphics.Color
 import android.util.Log
+import androidx.annotation.Nullable
 import com.brentvatne.common.api.BufferingStrategy
 import com.brentvatne.common.api.ControlsConfig
 import com.brentvatne.common.api.ResizeMode
@@ -16,6 +17,10 @@ import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
+
+
+// Custom Imports
+//import com.brentvatne.react.ConvivaHelper;
 
 class ReactExoplayerViewManager(private val config: ReactExoplayerConfig) : ViewGroupManager<ReactExoplayerView>() {
 
@@ -59,6 +64,18 @@ class ReactExoplayerViewManager(private val config: ReactExoplayerConfig) : View
         private const val PROP_SHOW_NOTIFICATION_CONTROLS = "showNotificationControls"
         private const val PROP_DEBUG = "debug"
         private const val PROP_CONTROLS_STYLES = "controlsStyles"
+
+        // Conviva
+        private const val PROP_ENABLE_CONVIVA_VIDEO_ANALYTICS: String = "enableConvivaVideoAnalytics"
+        // Set Extension Renderer Mode
+        private const val PROP_SET_EXTENSION_RENDERER_MODE: String = "extensionRendererMode"
+        // Set initial bitrate
+        private const val PROP_SET_INITIAL_BITRATE_ESTIMATE: String = "initialBitrateEstimate"
+        private const val PROP_CONVIVA_CONTENT_INFO: String = "convivaContentInfo"
+        // Reload Player
+        private const val PROP_IS_RELOADING_PLAYER: String = "isReloadingPlayer"
+        private const val PROP_DESTROY_CONVIVA_AFTER_RELOAD: String = "destroyConvivaAfterReload"
+        private const val PROP_PLAYER_RELOAD_ERROR_TYPE: String = "playerReloadErrorType"
     }
 
     override fun getName(): String = REACT_CLASS
@@ -268,5 +285,50 @@ class ReactExoplayerViewManager(private val config: ReactExoplayerConfig) : View
     fun setControlsStyles(videoView: ReactExoplayerView, controlsStyles: ReadableMap?) {
         val controlsConfig = ControlsConfig.parse(controlsStyles)
         videoView.setControlsStyles(controlsConfig)
+    }
+
+    // Set Extension Renderer Mode
+    @ReactProp(name = PROP_SET_EXTENSION_RENDERER_MODE, defaultInt = 0)
+    fun setExtensionRendererMode(videoView: ReactExoplayerView, extensionRendererMode: Int) {
+        videoView.setExtensionRendererModeState(extensionRendererMode)
+    }
+
+    // Set initial bitrate
+    @ReactProp(name = PROP_SET_INITIAL_BITRATE_ESTIMATE, defaultInt = 1000000)
+    fun setInitialBitrateEstimate(videoView: ReactExoplayerView, initialBitrateEstimate: Int) {
+        videoView.setInitialBitrateEstimateState(initialBitrateEstimate)
+    }
+
+    // Conviva
+    @ReactProp(name = PROP_ENABLE_CONVIVA_VIDEO_ANALYTICS, defaultBoolean = false)
+    fun setConvivaVideoAnalyticsState(videoView: ReactExoplayerView, enableConvivaVideoAnalytics: Boolean) {
+        videoView.setConvivaVideoAnalyticsState(enableConvivaVideoAnalytics)
+    }
+
+    @ReactProp(name = PROP_CONVIVA_CONTENT_INFO)
+    fun setConvivaContentInfo(videoView: ReactExoplayerView, @Nullable convivaContentInfo: ReadableMap?) {
+//        if (convivaContentInfo != null) {
+//            val _convivaContentInfo: Map<String, Any> = ConvivaHelper.readableMapToHashMap(convivaContentInfo)
+//            videoView.setConvivaContentInfo(_convivaContentInfo)
+//        }
+    }
+
+    // Reload Player
+    @ReactProp(name = PROP_IS_RELOADING_PLAYER)
+    fun setIsReloadingPlayer(videoView: ReactExoplayerView, isReloadingPlayer: Boolean) {
+        videoView.setIsReloadingPlayer(isReloadingPlayer)
+    }
+
+    @ReactProp(name = PROP_DESTROY_CONVIVA_AFTER_RELOAD)
+    fun setDestroyConvivaAfterReload(videoView: ReactExoplayerView, destroyConvivaAfterReload: Boolean) {
+        videoView.setDestroyConvivaAfterReload(destroyConvivaAfterReload)
+    }
+
+    @ReactProp(name = PROP_PLAYER_RELOAD_ERROR_TYPE)
+    fun setPlayerReloadErrorType(videoView: ReactExoplayerView, @Nullable playerReloadErrorType: ReadableMap?) {
+//        if (playerReloadErrorType != null) {
+//            val errorObject: Map<String, Any> = ConvivaHelper.readableMapToHashMap(playerReloadErrorType)
+//            videoView.setPlayerReloadErrorType(errorObject)
+//        }
     }
 }

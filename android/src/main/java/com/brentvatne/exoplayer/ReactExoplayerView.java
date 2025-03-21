@@ -7,6 +7,8 @@ import static androidx.media3.common.C.CONTENT_TYPE_RTSP;
 import static androidx.media3.common.C.CONTENT_TYPE_SS;
 import static androidx.media3.common.C.TIME_END_OF_SOURCE;
 
+import static com.google.android.gms.common.util.CollectionUtils.setOf;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -18,6 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
+import android.media.MediaCodecList;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -37,12 +40,16 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.Format;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.Metadata;
+import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
@@ -130,27 +137,32 @@ import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.uimanager.ThemedReactContext;
+import com.google.ads.interactivemedia.v3.api.Ad;
 import com.google.ads.interactivemedia.v3.api.AdError;
 import com.google.ads.interactivemedia.v3.api.AdErrorEvent;
 import com.google.ads.interactivemedia.v3.api.AdEvent;
 import com.google.ads.interactivemedia.v3.api.ImaSdkFactory;
 import com.google.ads.interactivemedia.v3.api.ImaSdkSettings;
+import com.google.ads.interactivemedia.v3.impl.zze;
 import com.google.common.collect.ImmutableList;
 
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+//import com.brentvatne.react.ConvivaHelper;
 
 @SuppressLint("ViewConstructor")
 public class ReactExoplayerView extends FrameLayout implements
@@ -160,7 +172,8 @@ public class ReactExoplayerView extends FrameLayout implements
         BecomingNoisyListener,
         DrmSessionEventListener,
         AdEvent.AdEventListener,
-        AdErrorEvent.AdErrorListener {
+        AdErrorEvent.AdErrorListener,
+        VideoAnalyticsCallback{
 
     public static final double DEFAULT_MAX_HEAP_ALLOCATION_PERCENT = 1;
     public static final double DEFAULT_MIN_BUFFER_MEMORY_RESERVE = 0;
@@ -267,6 +280,37 @@ public class ReactExoplayerView extends FrameLayout implements
     private boolean viewHasDropped = false;
     private int selectedSpeedIndex = 1; // Default is 1.0x
 
+    // Codec - Patch
+    private long resumePositionLocal = 0;
+    private int localRetryCount = 0;
+    private String pictureInPictureFragmentTag = "";
+    private Map<String, String> adInfoGlobal = new HashMap<>();
+
+    // Define valid render states as a static final Set for re-usability and efficiency
+    private static final Set<Integer> VALID_RENDERER_MODES = Set.of(
+            DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF,
+            DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON,
+            DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER
+    );
+    private int extensionRendererMode;
+
+    private int initialBitrateEstimate = 1000000;
+
+    // Conviva
+//    private long playerInitTime;
+//    private boolean enableConvivaVideoAnalytics;
+//    private Map<String, Object> convivaContentInfo;
+
+    // Reload Player
+    private ArrayList<Integer> retryErrorCodes = new ArrayList<>();
+    private boolean reloadingPlayer = false;
+    private boolean destroyConvivaAfterReload = false;
+    private Map<String, Object> playerReloadErrorType = new HashMap<>();
+
+    /* Added Custom rnEventEmitter for sending event to js part  */
+    private final RNEventEmitter rnEventEmitter;
+    /* End of rnEventEmitter */
+
     private final String instanceId = String.valueOf(UUID.randomUUID());
 
     private CmcdConfiguration.Factory cmcdConfigurationFactory;
@@ -321,6 +365,7 @@ public class ReactExoplayerView extends FrameLayout implements
         super(context);
         this.themedReactContext = context;
         this.eventEmitter = new VideoEventEmitter();
+        this.rnEventEmitter = new RNEventEmitter(context);
         this.config = config;
         this.bandwidthMeter = config.getBandwidthMeter();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && pictureInPictureParamsBuilder == null) {
@@ -335,6 +380,9 @@ public class ReactExoplayerView extends FrameLayout implements
         audioBecomingNoisyReceiver = new AudioBecomingNoisyReceiver(themedReactContext);
         audioFocusChangeListener = new OnAudioFocusChangedListener(this, themedReactContext);
         pictureInPictureReceiver = new PictureInPictureReceiver(this, themedReactContext);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && pictureInPictureParamsBuilder == null) {
+            pictureInPictureParamsBuilder = new PictureInPictureParams.Builder();
+        }
     }
 
     private boolean isPlayingAd() {
@@ -360,9 +408,33 @@ public class ReactExoplayerView extends FrameLayout implements
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        Activity activity = themedReactContext.getCurrentActivity();
+        if (activity instanceof FragmentActivity) {
+            ReactExoplayerFragment fragment = new ReactExoplayerFragment(this);
+            pictureInPictureFragmentTag = fragment.getId();
+            ((FragmentActivity) activity)
+                    .getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(fragment, fragment.getId())
+                    .commitAllowingStateLoss();
+        }
+    }
+
+    @Override
     protected void onDetachedFromWindow() {
         cleanupPlaybackService();
         super.onDetachedFromWindow();
+        Activity activity = themedReactContext.getCurrentActivity();
+        if (activity instanceof FragmentActivity) {
+            FragmentManager fragmentManager = ((FragmentActivity) activity).getSupportFragmentManager();
+            Fragment fragment = fragmentManager.findFragmentByTag(pictureInPictureFragmentTag);
+            if (fragment == null) return;
+            fragmentManager.beginTransaction()
+                    .remove(fragment)
+                    .commitAllowingStateLoss();
+        }
     }
 
     // LifecycleEventListener implementation
@@ -380,6 +452,10 @@ public class ReactExoplayerView extends FrameLayout implements
         Activity activity = themedReactContext.getCurrentActivity();
         boolean isInPictureInPicture = Util.SDK_INT >= Build.VERSION_CODES.N && activity != null && activity.isInPictureInPictureMode();
         boolean isInMultiWindowMode = Util.SDK_INT >= Build.VERSION_CODES.N && activity != null && activity.isInMultiWindowMode();
+        if (enterPictureInPictureOnLeave && !isInPictureInPicture) {
+            enterPictureInPictureMode();
+            return;
+        }
         if (playInBackground || isInPictureInPicture || isInMultiWindowMode) {
             return;
         }
@@ -404,6 +480,9 @@ public class ReactExoplayerView extends FrameLayout implements
         if (mReportBandwidth) {
             if (player == null) {
                 eventEmitter.onVideoBandwidthUpdate.invoke(bitrate, 0, 0, null);
+//                if (isPlayingAd()) {
+//                    ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.BITRATE, 0);
+//                }
             } else {
                 Format videoFormat = player.getVideoFormat();
                 boolean isRotatedContent = videoFormat != null && (videoFormat.rotationDegrees == 90 || videoFormat.rotationDegrees == 270);
@@ -411,6 +490,9 @@ public class ReactExoplayerView extends FrameLayout implements
                 int height = videoFormat != null ? (isRotatedContent ? videoFormat.width : videoFormat.height) : 0;
                 String trackId = videoFormat != null ? videoFormat.id : null;
                 eventEmitter.onVideoBandwidthUpdate.invoke(bitrate, height, width, trackId);
+//                if (isPlayingAd()) {
+//                    ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.BITRATE, height);
+//                }
             }
         }
     }
@@ -684,6 +766,15 @@ public class ReactExoplayerView extends FrameLayout implements
         exoPlayerView.updateSurfaceView(viewType);
     }
 
+    /*
+     * Player - Multi Player Instance Fix
+     * Date Patch: 10 Dec 2024
+     * Author: Kaushal Gupta
+     * */
+    public void releaseExoPlayer() {
+        releasePlayer();
+    }
+
     private class RNVLoadControl extends DefaultLoadControl {
         private final int availableHeapInBytes;
         private final Runtime runtime;
@@ -841,16 +932,47 @@ public class ReactExoplayerView extends FrameLayout implements
         self.trackSelector.setParameters(trackSelector.buildUponParameters()
                 .setMaxVideoBitrate(maxBitRate == 0 ? Integer.MAX_VALUE : maxBitRate));
 
-        DefaultAllocator allocator = new DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE);
+        /*
+         * Date Patch: 10 Jan 2025
+         * Author: Rohan Kumar Singh
+         * Issue: [4001]: ERROR_CODE_DECODER_INIT_FAILED - androidx.media3.exoplayer.mediacodec.MediaCodecRenderer$DecoderInitializationException: Decoder init failed: [-49999], Format(audio_400081_und=400000, null, null, audio/ac3, ac-3, 32000, und, [-1, -1, -1.0, null]
+         * */
+        boolean dolbySupported = new AudioSupportChecker().isDolbyAudioSupported();
+        if (dolbySupported) {
+            self.trackSelector.setParameters(trackSelector.buildUponParameters()
+                    .setMaxVideoBitrate(maxBitRate == 0 ? Integer.MAX_VALUE : maxBitRate)
+            );
+        } else {
+            self.trackSelector.setParameters(trackSelector.buildUponParameters()
+                    .setMaxVideoBitrate(maxBitRate == 0 ? Integer.MAX_VALUE : maxBitRate)
+                    .setPreferredAudioMimeTypes(MimeTypes.AUDIO_MP4, MimeTypes.AUDIO_AAC)
+            );
+        }
+
+        DefaultAllocator allocator = new DefaultAllocator(true,32 * 1024); // there was C.DEFAULT_BUFFER_SEGMENT_SIZE
         RNVLoadControl loadControl = new RNVLoadControl(
                 allocator,
                 source.getBufferConfig()
         );
+        /*
+         * Author: Rohan Kumar Singh
+         * Date: 23 Jan 2025
+         * Issue: MediaCodecVideoRenderer Issue
+         * Solution: Setting the extensionRendererMode dynamically from JS.
+         * */
         DefaultRenderersFactory renderersFactory =
                 new DefaultRenderersFactory(getContext())
-                        .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF)
+                        .setExtensionRendererMode(extensionRendererMode)
                         .setEnableDecoderFallback(true)
                         .forceEnableMediaCodecAsynchronousQueueing();
+
+        /*
+         * Date Patch: 10 Dec 2024
+         * Author: Rohan Kumar Singh
+         * Issue: Error Code: 21004, [1003]ERROR_CODE_TIMEOUT - androidx.media3.exoplayer.ExoTimeoutException
+         * Solution: https://github.com/androidx/media/issues/1641
+         * */
+        renderersFactory.experimentalSetMediaCodecAsyncCryptoFlagEnabled(false);
 
         DefaultMediaSourceFactory mediaSourceFactory = new DefaultMediaSourceFactory(mediaDataSourceFactory);
         if (useCache) {
@@ -858,16 +980,25 @@ public class ReactExoplayerView extends FrameLayout implements
         }
 
         mediaSourceFactory.setLocalAdInsertionComponents(unusedAdTagUri -> adsLoader, exoPlayerView);
-
+        /*
+         * Author:- Shubham Mishra
+         * HotFix:- Given initial bandwidth to the player forcefully
+         * ProperFix:- Pass initial bandwidth from JS and use it here, will be picked in future. - Done by Rohan - 23 Jan 2025
+         * */
+        DefaultBandwidthMeter customInitialBandwidth = new DefaultBandwidthMeter.Builder(getContext()).setInitialBitrateEstimate(initialBitrateEstimate).build();
         player = new ExoPlayer.Builder(getContext(), renderersFactory)
                 .setTrackSelector(self.trackSelector)
-                .setBandwidthMeter(bandwidthMeter)
+                .setBandwidthMeter(customInitialBandwidth) // Before there was bandwidthMeter
                 .setLoadControl(loadControl)
                 .setMediaSourceFactory(mediaSourceFactory)
                 .build();
+//        initConvivaAnalyticsSession(adsLoader);
         ReactNativeVideoManager.Companion.getInstance().onInstanceCreated(instanceId, player);
         refreshDebugState();
         player.addListener(self);
+        /* Initialising video analytic listner for network detection (ALC-3097) */
+        player.addAnalyticsListener(new VideoAnalyticsListener(getContext(), this));
+        /* End of initialisation (ALC-3097) */
         player.setVolume(muted ? 0.f : audioVolume * 1);
         exoPlayerView.setPlayer(player);
 
@@ -929,9 +1060,14 @@ public class ReactExoplayerView extends FrameLayout implements
         try {
             // First check if there's a custom DRM manager registered through the plugin system
             DRMManagerSpec drmManager = ReactNativeVideoManager.Companion.getInstance().getDRMManager();
+            var keyRequestPropertiesArray = drmProps.getDrmLicenseHeader();
             if (drmManager == null) {
                 // If no custom manager is registered, use the default implementation
-                drmManager = new DRMManager(buildHttpDataSourceFactory(false));
+                if(keyRequestPropertiesArray == null) {
+                    drmManager = new DRMManager(buildHttpDataSourceFactory(true));
+                }else{
+                    drmManager = new DRMManager(buildHttpDataSourceDrmFactory(true));
+                }
             }
 
             DrmSessionManager drmSessionManager = drmManager.buildDrmSessionManager(uuid, drmProps);
@@ -994,6 +1130,13 @@ public class ReactExoplayerView extends FrameLayout implements
         } else {
             player.setMediaSource(mediaSource, true);
         }
+
+        // Codec - Patch
+        if (resumePositionLocal > 0) {
+            seekTo(resumePositionLocal);
+            resumePositionLocal = 0;
+        }
+
         player.prepare();
         playerNeedsSource = false;
 
@@ -1283,6 +1426,13 @@ public class ReactExoplayerView extends FrameLayout implements
             }
 
             updateResumePosition();
+            /*
+             * Author: Rohan Kumar Singh
+             * Date: 23 Jan 2025
+             * Issue: [1003]: ERROR_CODE_TIMEOUT - androidx.media3.exoplayer.ExoTimeoutException: Detaching surface timed out. - Unexpected runtime error
+             * */
+            player.setVideoSurface(null);
+            player.stop();
             player.release();
             player.removeListener(this);
             PictureInPictureUtil.applyAutoEnterEnabled(themedReactContext, pictureInPictureParamsBuilder, false);
@@ -1293,6 +1443,7 @@ public class ReactExoplayerView extends FrameLayout implements
 
             ReactNativeVideoManager.Companion.getInstance().onInstanceRemoved(instanceId, player);
             player = null;
+//            destroyConvivaAnalyticsSession();
         }
 
         if (adsLoader != null) {
@@ -1393,6 +1544,9 @@ public class ReactExoplayerView extends FrameLayout implements
         if (player != null) {
             if (!player.getPlayWhenReady()) {
                 setPlayWhenReady(true);
+//                if (isPlayingAd()) {
+//                    ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.PLAYER_STATE, ConvivaSdkConstants.PlayerState.PLAYING);
+//                }
             }
             setKeepScreenOn(preventsDisplaySleepDuringVideoPlayback);
         }
@@ -1402,6 +1556,9 @@ public class ReactExoplayerView extends FrameLayout implements
         if (player != null) {
             if (player.getPlayWhenReady()) {
                 setPlayWhenReady(false);
+//                if (isPlayingAd()) {
+//                    ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.PLAYER_STATE, ConvivaSdkConstants.PlayerState.PAUSED);
+//                }
             }
         }
         setKeepScreenOn(false);
@@ -1448,6 +1605,17 @@ public class ReactExoplayerView extends FrameLayout implements
      */
     private HttpDataSource.Factory buildHttpDataSourceFactory(boolean useBandwidthMeter) {
         return DataSourceUtil.getDefaultHttpDataSourceFactory(this.themedReactContext, useBandwidthMeter ? bandwidthMeter : null, source.getHeaders());
+    }
+
+    /**
+     * Returns a new HttpDataSource for DRM license factory.
+     *
+     * @param useBandwidthMeter Whether to set {@link #bandwidthMeter} as a listener to the new
+     *     DataSource factory.
+     * @return A new HttpDataSource factory.
+     */
+    private HttpDataSource.Factory buildHttpDataSourceDrmFactory(boolean useBandwidthMeter) {
+        return DataSourceUtil.getDefaultHttpDataSourceDrmFactory(this.themedReactContext, useBandwidthMeter ? bandwidthMeter : null, null);
     }
 
     // AudioBecomingNoisyListener implementation
@@ -1760,6 +1928,9 @@ public class ReactExoplayerView extends FrameLayout implements
 
         isBuffering = buffering;
         eventEmitter.onVideoBuffer.invoke(buffering);
+//        if (isBuffering && isPlayingAd()) {
+//            ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.PLAYER_STATE, ConvivaSdkConstants.PlayerState.BUFFERING);
+//        }
     }
 
     @Override
@@ -1831,8 +2002,78 @@ public class ReactExoplayerView extends FrameLayout implements
     @Override
     public void onPlayerError(@NonNull PlaybackException e) {
         String errorString = "ExoPlaybackException: " + PlaybackException.getErrorCodeName(e.errorCode);
-        String errorCode = "2" + e.errorCode;
+        String errorCode = "" + e.errorCode;
         switch(e.errorCode) {
+            case PlaybackException.ERROR_CODE_IO_UNSPECIFIED:
+                /*
+                 * Error Handling
+                 * Date Patch: 17 Oct 2024
+                 * Author: Rohan Kumar Singh
+                 * */
+//                Uri adTagUrl = source.getAdsProps().getAdTagUrl();
+//                if (adTagUrl != null) {
+//                    adTagUrl = null;
+//                }
+                if (adsLoader != null) {
+                    adsLoader.release();
+//                    adsLoader = null;
+                }
+                initializePlayer();
+                return;
+            case PlaybackException.ERROR_CODE_UNSPECIFIED:
+            case PlaybackException.ERROR_CODE_DECODING_FAILED:
+            case PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW:
+            case PlaybackException.ERROR_CODE_DECODER_INIT_FAILED:
+            case PlaybackException.ERROR_CODE_DECODER_QUERY_FAILED:
+            case PlaybackException.ERROR_CODE_DRM_SCHEME_UNSUPPORTED:
+            case PlaybackException.ERROR_CODE_DECODING_FORMAT_EXCEEDS_CAPABILITIES:
+                // Codec - Patch
+                var bufferConfig = new BufferConfig();
+                if (bufferConfig.getLive().isLiveConfigured()) {
+                    /*
+                     * Error Handling
+                     * Date Patch: 17 Oct 2024
+                     * Author: Rohan Kumar Singh
+                     * */
+//                    if (adTagUrl != null) {
+//                        adTagUrl = null;
+//                    }
+                    if (adsLoader != null) {
+                        adsLoader.release();
+                    }
+                }
+                if (localRetryCount > 3) {
+                    eventEmitter.onVideoError.invoke(errorString, e, errorCode);
+                    playerNeedsSource = true;
+                    if (isBehindLiveWindow(e)) {
+                        clearResumePosition();
+                        initializePlayer();
+                    } else {
+                        updateResumePosition();
+                    }
+                    return;
+                }
+                localRetryCount = localRetryCount + 1;
+                resumePositionLocal = Math.max(0, player.getCurrentPosition());
+                /*
+                 * Error Handling
+                 * Date Patch: 17 Oct 2024
+                 * Author: Rohan Kumar Singh
+                 * */
+                if (isBehindLiveWindow(e)) {
+                    clearResumePosition();
+                    initializePlayer();
+                    return;
+                } else {
+                    updateResumePosition();
+                }
+                player.stop();
+                player.clearMediaItems();
+                playerNeedsSource = true;
+                releasePlayer();
+                initializePlayer();
+                setPlayWhenReady(true);
+                return;
             case PlaybackException.ERROR_CODE_DRM_DEVICE_REVOKED:
             case PlaybackException.ERROR_CODE_DRM_LICENSE_ACQUISITION_FAILED:
             case PlaybackException.ERROR_CODE_DRM_PROVISIONING_FAILED:
@@ -1841,11 +2082,16 @@ public class ReactExoplayerView extends FrameLayout implements
                 if (!hasDrmFailed) {
                     // When DRM fails to reach the app level certificate server it will fail with a source error so we assume that it is DRM related and try one more time
                     hasDrmFailed = true;
-                    playerNeedsSource = true;
-                    updateResumePosition();
-                    initializePlayer();
-                    setPlayWhenReady(true);
-                    return;
+                    /*
+                     * ACL-2221 Changes
+                     * Date Patch: 13 Nov 2024
+                     * Author: Rohan Kumar Singh
+                     * */
+                    // playerNeedsSource = true;
+                    // updateResumePosition();
+                    // initializePlayer();
+                    // setPlayWhenReady(true);
+                    // return;
                 }
                 break;
             default:
@@ -2189,15 +2435,20 @@ public class ReactExoplayerView extends FrameLayout implements
             return C.INDEX_UNSET;
         }
 
-        int groupIndex = 0; // default if no match
+        int groupIndex = C.INDEX_UNSET; // default if no match
         String locale2 = Locale.getDefault().getLanguage(); // 2 letter code
         String locale3 = Locale.getDefault().getISO3Language(); // 3 letter code
         for (int i = 0; i < groups.length; ++i) {
             Format format = groups.get(i).getFormat(0);
             String language = format.language;
-            if (language != null && (language.equals(locale2) || language.equals(locale3))) {
-                groupIndex = i;
-                break;
+            Boolean isSupported = isCodecSupported(format.sampleMimeType);
+            if (isSupported) {
+                if (language != null && (language.equals(locale2) || language.equals(locale3))) {
+                    groupIndex = i;
+                    break;
+                } else {
+                    groupIndex = i;
+                }
             }
         }
         return groupIndex;
@@ -2252,7 +2503,14 @@ public class ReactExoplayerView extends FrameLayout implements
 
         View decorView = currentActivity.getWindow().getDecorView();
         ViewGroup rootView = decorView.findViewById(android.R.id.content);
-
+        /*
+         * Error Handling
+         * Date Patch: 03 Feb 2025
+         * Author: Kaushal Gupta
+         * */
+        if(rootView == null){
+            return;
+        }
         LayoutParams layoutParams = new LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT);
@@ -2281,6 +2539,9 @@ public class ReactExoplayerView extends FrameLayout implements
     }
 
     public void enterPictureInPictureMode() {
+        if (player == null) {
+            return;
+        }
         PictureInPictureParams _pipParams = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             ArrayList<RemoteAction> actions = PictureInPictureUtil.getPictureInPictureActions(themedReactContext, isPaused, pictureInPictureReceiver);
@@ -2532,10 +2793,54 @@ public class ReactExoplayerView extends FrameLayout implements
 
     @Override
     public void onAdEvent(AdEvent adEvent) {
+        var adEventName = adEvent.getType().name();
         if (adEvent.getAdData() != null) {
-            eventEmitter.onReceiveAdEvent.invoke(adEvent.getType().name(), adEvent.getAdData());
+            eventEmitter.onReceiveAdEvent.invoke(adEventName, adEvent.getAdData());
         } else {
-            eventEmitter.onReceiveAdEvent.invoke(adEvent.getType().name(), null);
+            eventEmitter.onReceiveAdEvent.invoke(adEventName, null);
+        }
+        Map<String, String> adInfo = new HashMap<>();
+        if (adEvent instanceof zze) {
+            Ad ad = ((zze) adEvent).getAd();
+            if (ad != null) {
+                adInfo.put("adId", ad.getAdId());
+                adInfo.put("adTitle", ad.getTitle());
+                adInfo.put("adSystem", ad.getAdSystem());
+                adInfo.put("adDescription", ad.getDescription());
+                adInfo.put("duration", String.valueOf(ad.getDuration()));
+                adInfo.put("skippable", String.valueOf(ad.isSkippable()));
+                adInfo.put("contentType", ad.getContentType());
+                adInfo.put("VASTMediaWidth", String.valueOf(ad.getVastMediaWidth()));
+                adInfo.put("VASTMediaHeight", String.valueOf(ad.getVastMediaHeight()));
+                adInfo.put("VASTMediaBitrate", String.valueOf(ad.getVastMediaBitrate()));
+                adInfo.put("universalAdIdValue", ad.getUniversalAdIdValue());
+                adInfo.put("universalAdIdRegistry", ad.getUniversalAdIdRegistry());
+                adInfo.put("adPosition", String.valueOf(ad.getAdPodInfo().getAdPosition()));
+                adInfo.put("podIndex", String.valueOf(ad.getAdPodInfo().getPodIndex()));
+                adInfoGlobal = adInfo;
+            }
+        }
+        if (adEventName == "AD_BREAK_FETCH_ERROR" || adEventName == "UNKNOWN" || adEventName == "ERROR") {
+//            ConvivaHelper._reportAdBreakEnded();
+//            ConvivaHelper.setPlayerRef(player);
+        }
+        if (adEventName == "CONTENT_RESUME_REQUESTED") {
+            try {
+                if (player != null && adInfoGlobal != null && Integer.parseInt(adInfoGlobal.get("podIndex")) == 0) {
+                    adInfoGlobal = null;
+//                    ConvivaHelper._reportAdBreakEnded();
+//                    ConvivaHelper.setPlayerRef(player);
+                }
+            } catch (Exception e) {
+//                ConvivaHelper.setPlayerRef(player);
+            }
+        }
+        if (adEvent.getAdData() != null) {
+            eventEmitter.onReceiveAdEvent.invoke(adEventName, adEvent.getAdData());
+        } else if (adInfo.size() > 0 && (adEventName == "LOADED" || adEventName == "STARTED" || adEventName == "UNKNOWN")) {
+            eventEmitter.onReceiveAdEvent.invoke(adEventName, adInfo);
+        } else {
+            eventEmitter.onReceiveAdEvent.invoke(adEventName, new HashMap<String, String>());
         }
     }
 
@@ -2554,4 +2859,112 @@ public class ReactExoplayerView extends FrameLayout implements
         controlsConfig = controlsStyles;
         refreshControlsStyles();
     }
+
+    // Set Extension Renderer Mode
+    public void setExtensionRendererModeState(int state) {
+        extensionRendererMode = VALID_RENDERER_MODES.contains(state)
+                ? state
+                : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
+    }
+
+    // Set initial bitrate
+    public void setInitialBitrateEstimateState(int state) {
+        initialBitrateEstimate = state;
+    }
+
+    /**
+     * +     * Conviva methods starts here
+     * +
+     */
+    public void setConvivaVideoAnalyticsState(boolean state) {
+//        enableConvivaVideoAnalytics = state;
+    }
+
+    public void setConvivaContentInfo(Map<String, Object> _convivaContentInfo) {
+//        convivaContentInfo = _convivaContentInfo;
+    }
+
+    public void initConvivaAnalyticsSession(ImaAdsLoader adsLoader) {
+//        if (enableConvivaVideoAnalytics == true) {
+//            ConvivaHelper.setPlayerReference(ConvivaHelper.buildVideoAnalytics(getContext()), player, convivaContentInfo, adTagUrl, adsLoader);
+//            playerInitTime = System.currentTimeMillis();
+//        }
+    }
+
+    public void destroyConvivaAnalyticsSession() {
+//        if (enableConvivaVideoAnalytics == true) {
+//            ConvivaHelper._reportAdEnded();
+//            ConvivaHelper.releaseVideoAdAnalytics();
+//            ConvivaHelper.reportPlaybackEnded();
+//            ConvivaHelper.releaseVideoAnalytics();
+//        }
+    }
+
+    /**
+     * @return A list of codec names and their supported types.
+     * @Rahul Nainwal - audio codes issue when no lang tag is there in manifest file
+     * Returns a list of supported codecs on the device.
+     */
+
+    public boolean isCodecSupported(String format) {
+        List<String> codecList = new ArrayList<>();
+        int codecCount = MediaCodecList.getCodecCount();
+        for (int i = 0; i < codecCount; i++) {
+            android.media.MediaCodecInfo codecInfo = MediaCodecList.getCodecInfoAt(i);
+            //String codecName = codecInfo.getName();
+            //boolean isEncoder = codecInfo.isEncoder();
+            //String codecType = isEncoder ? "Encoder" : "Decoder";
+            for (String type : codecInfo.getSupportedTypes()) {
+                codecList.add(type);
+            }
+        }
+        if (codecList.size() > 0) {
+            return codecList.contains(format);
+        }
+        return false;
+    }
+
+    /**
+     Conviva methods starts here
+     **/
+
+
+    /**
+     * Conviva methods Ends here
+     */
+
+    /**
+     * Reload Player
+     */
+    public void setIsReloadingPlayer(boolean state) {
+        reloadingPlayer = state;
+    }
+
+    public void setDestroyConvivaAfterReload(boolean state) {
+        destroyConvivaAfterReload = state;
+    }
+
+    public void setPlayerReloadErrorType(Map<String, Object> errorObject) {
+        playerReloadErrorType = errorObject;
+    }
+    /**
+     * Reload Player
+     */
+
+    /*
+     * Player -Low Network Detection (ALC-3097)
+     * Date Patch: 22 Jan 2025
+     * Author: Vibhash Kumar
+     * */
+
+    /* Analytic callback from VideoAnalyticListner.java
+     * sending Network data to JS part
+     * (ALC-3097) */
+
+    @Override
+    public void onAnalyticsDataReceived(HashMap<String, String> data) {
+        rnEventEmitter.sendEvent(data);
+    }
+
+    /* End of Network Detection - (ALC-3097)  */
 }

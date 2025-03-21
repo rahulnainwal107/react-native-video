@@ -33,16 +33,29 @@ class DRMManager(private val dataSourceFactory: HttpDataSource.Factory) : DRMMan
 
             val mediaDrm = FrameworkMediaDrm.newInstance(uuid)
 
-            // TODO: This isn't very secure, should be fixed
+
+            /*
+             * Author: Kaushal Gupta
+             * Date: 27 Feb 2025
+             * Issue:
+            [1000]: ERROR_CODE_UNSPECIFIED - android.media.MediaCodec$CryptoException: Error decrypting data: requested key has not been loaded: ERROR_DRM_NO_LICENSE
+             * */
+            val securityLevel = mediaDrm.getPropertyString("securityLevel")
+            if(securityLevel.equals("L1")){
+                mediaDrm.setPropertyString("securityLevel", "L1");
+            }
+            else{
+                mediaDrm.setPropertyString("securityLevel", "L3");
+            }
             if (hasDrmFailed) {
                 // When DRM fails using L1 we want to switch to L3
-                mediaDrm.setPropertyString("securityLevel", "L3")
+                mediaDrm.setPropertyString("securityLevel", "L3");
             }
-
             return DefaultDrmSessionManager.Builder()
                 .setUuidAndExoMediaDrmProvider(uuid) { mediaDrm }
                 .setKeyRequestParameters(null)
                 .setMultiSession(drmProps.multiDrm)
+                // .setLoadErrorHandlingPolicy(new CustomLoadErrorHandlingPolicy())
                 .build(drmCallback)
         } catch (ex: UnsupportedDrmException) {
             hasDrmFailed = true

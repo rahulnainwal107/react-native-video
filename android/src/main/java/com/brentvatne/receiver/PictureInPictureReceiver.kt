@@ -55,9 +55,7 @@ class PictureInPictureReceiver(private val view: ReactExoplayerView, private val
         val requestCode = if (isPaused) REQUEST_PLAY else REQUEST_PAUSE
         val controlType = if (isPaused) CONTROL_TYPE_PLAY else CONTROL_TYPE_PAUSE
         val flag =
-            if (Build.VERSION.SDK_INT >=
-                Build.VERSION_CODES.M
-            ) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             } else {
                 PendingIntent.FLAG_UPDATE_CURRENT

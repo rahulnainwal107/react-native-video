@@ -1,6 +1,9 @@
 package com.brentvatne.exoplayer
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
+import android.os.Build
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
@@ -19,11 +22,13 @@ import androidx.media3.common.text.Cue
 import androidx.media3.common.util.Assertions
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
 import com.brentvatne.common.api.ResizeMode
 import com.brentvatne.common.api.SubtitleStyle
 import com.brentvatne.common.api.ViewType
 import com.brentvatne.common.toolbox.DebugLog
+import kotlin.math.roundToInt
 
 @UnstableApi
 class ExoPlayerView(private val context: Context) :
@@ -114,38 +119,48 @@ class ExoPlayerView(private val context: Context) :
         }
     }
 
+    /*
+ *  Custom Subtitle Changes
+ * Date Patch: DD MMM YYYY
+ * Author: Janmejay Singh
+ */
     fun setSubtitleStyle(style: SubtitleStyle) {
-        // ensure we reset subtitle style before reapplying it
-        subtitleLayout.setUserDefaultStyle()
-        subtitleLayout.setUserDefaultTextSize()
+        // Ensure we reset subtitle style before reapplying it
+        val typeface = Typeface.create("roboto", Typeface.NORMAL)
 
-        if (style.fontSize > 0) {
-            subtitleLayout.setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, style.fontSize.toFloat())
-        }
-        subtitleLayout.setPadding(
-            style.paddingLeft,
-            style.paddingTop,
-            style.paddingTop,
-            style.paddingBottom
+        val textSizeInSp = convertPxToSp(18f, context)
+        val paddingBottomInDp = convertPxToDpInt(48f, context)
+
+        // Create a custom CaptionStyleCompat
+        val customStyle = CaptionStyleCompat(
+            Color.WHITE, // Text Color
+            Color.TRANSPARENT,  // Background color
+            Color.TRANSPARENT,  // Window color
+            CaptionStyleCompat.EDGE_TYPE_OUTLINE,  // Edge type
+            Color.BLACK,  // Edge color
+            typeface     // Typeface
         )
-        if (style.opacity != 0.0f) {
-            subtitleLayout.alpha = style.opacity
-            subtitleLayout.visibility = View.VISIBLE
+
+        // Set fixed text size and style
+        subtitleLayout.setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, textSizeInSp)
+        subtitleLayout.setPadding(0, 0, 0, paddingBottomInDp)
+        subtitleLayout.setStyle(customStyle)
+    }
+
+    fun convertPxToSp(px: Float, context: Context): Float {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Modern method using Resources
+            val fontScale = context.resources.configuration.fontScale
+            px / (fontScale * context.resources.displayMetrics.density)
         } else {
-            subtitleLayout.visibility = View.GONE
+            // Legacy method for older devices
+            px / context.resources.displayMetrics.scaledDensity
         }
-        if (localStyle.subtitlesFollowVideo != style.subtitlesFollowVideo) {
-            // No need to manipulate layout if value didn't change
-            if (style.subtitlesFollowVideo) {
-                removeViewInLayout(subtitleLayout)
-                layout.addView(subtitleLayout, layoutParams)
-            } else {
-                layout.removeViewInLayout(subtitleLayout)
-                addViewInLayout(subtitleLayout, 1, layoutParams, false)
-            }
-            requestLayout()
-        }
-        localStyle = style
+    }
+
+    fun convertPxToDpInt(px: Float, context: Context): Int {
+        val displayMetrics = context.resources.displayMetrics
+        return (px / displayMetrics.density).roundToInt()
     }
 
     fun setShutterColor(color: Int) {

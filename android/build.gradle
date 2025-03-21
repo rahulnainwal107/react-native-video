@@ -311,4 +311,7 @@ dependencies {
         // Common functionality used across multiple media libraries
         implementation "androidx.media3:media3-common:$media3_version"
     }
+    // Conviva
+    implementation 'com.conviva.sdk:conviva-exoplayer-sdk:4.1.5'
+    implementation 'com.conviva.sdk:conviva-core-sdk:4.0.43'
 }

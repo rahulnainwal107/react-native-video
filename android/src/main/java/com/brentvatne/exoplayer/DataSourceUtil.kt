@@ -20,6 +20,8 @@ object DataSourceUtil {
     private var defaultDataSourceFactory: DataSource.Factory? = null
     private var defaultHttpDataSourceFactory: HttpDataSource.Factory? = null
     private var userAgent: String? = null
+    @JvmStatic
+    private var defaultHttpDataSourceDrmFactory: HttpDataSource.Factory? = null
 
     private fun getUserAgent(context: ReactContext): String {
         if (userAgent == null) {
@@ -46,6 +48,18 @@ object DataSourceUtil {
             defaultHttpDataSourceFactory = buildHttpDataSourceFactory(context, bandwidthMeter, requestHeaders)
         }
         return defaultHttpDataSourceFactory as HttpDataSource.Factory
+    }
+
+    @JvmStatic
+    fun getDefaultHttpDataSourceDrmFactory(
+        context: ReactContext,
+        bandwidthMeter: DefaultBandwidthMeter,
+        requestHeaders: Map<String, String>?
+    ): HttpDataSource.Factory {
+        if (defaultHttpDataSourceDrmFactory == null || !requestHeaders.isNullOrEmpty()) {
+            defaultHttpDataSourceDrmFactory = buildHttpDataSourceFactory(context, bandwidthMeter, requestHeaders)
+        }
+        return defaultHttpDataSourceDrmFactory!!
     }
 
     private fun buildDataSourceFactory(

@@ -153,19 +153,51 @@ object PictureInPictureUtil {
 
     @JvmStatic
     @RequiresApi(Build.VERSION_CODES.O)
-    fun calcPictureInPictureAspectRatio(player: ExoPlayer): Rational {
-        var aspectRatio = Rational(player.videoSize.width, player.videoSize.height)
-        // AspectRatio for the activity in picture-in-picture, must be between 2.39:1 and 1:2.39 (inclusive).
-        // https://developer.android.com/reference/android/app/PictureInPictureParams.Builder#setAspectRatio(android.util.Rational)
-        val maximumRatio = Rational(239, 100)
-        val minimumRatio = Rational(100, 239)
-        if (aspectRatio.toFloat() > maximumRatio.toFloat()) {
-            aspectRatio = maximumRatio
-        } else if (aspectRatio.toFloat() < minimumRatio.toFloat()) {
-            aspectRatio = minimumRatio
+    fun calcPictureInPictureAspectRatio(player: ExoPlayer?): Rational {
+        /*
+        * Date: 27 Jan 2025
+        * Author: Rohan Kumar Singh
+        * Issue: Crash Issue - PictureInPictureUtil.calcPictureInPictureAspectRatio
+        * */
+        try {
+            val videoWidth = player?.videoSize?.width ?: 192
+            val videoHeight = player?.videoSize?.height ?: 108
+
+            // Handle invalid or zero sizes to avoid crashes
+            if (videoWidth == 0 || videoHeight == 0) {
+                // Return a default valid aspect ratio if the player dimensions are unavailable
+                return Rational(16, 9)
+            }
+
+            var aspectRatio = Rational(videoWidth, videoHeight)
+            // Android PiP doesn't support aspect ratios lower than 0.4184 or higher than 2.39
+            if (aspectRatio.toFloat() > 2.39) {
+                aspectRatio = Rational(239, 100)
+            } else if (aspectRatio.toFloat() < 0.4184) {
+                aspectRatio = Rational(10000, 4184)
+            }
+            return aspectRatio
+        } catch (e: Exception){
+            return Rational(192, 108);
         }
-        return aspectRatio
     }
+
+// Original code from react-native-video version 6.11.0
+//    @JvmStatic
+//    @RequiresApi(Build.VERSION_CODES.O)
+//    fun calcPictureInPictureAspectRatio(player: ExoPlayer): Rational {
+//        var aspectRatio = Rational(player.videoSize.width, player.videoSize.height)
+//        // AspectRatio for the activity in picture-in-picture, must be between 2.39:1 and 1:2.39 (inclusive).
+//        // https://developer.android.com/reference/android/app/PictureInPictureParams.Builder#setAspectRatio(android.util.Rational)
+//        val maximumRatio = Rational(239, 100)
+//        val minimumRatio = Rational(100, 239)
+//        if (aspectRatio.toFloat() > maximumRatio.toFloat()) {
+//            aspectRatio = maximumRatio
+//        } else if (aspectRatio.toFloat() < minimumRatio.toFloat()) {
+//            aspectRatio = minimumRatio
+//        }
+//        return aspectRatio
+//    }
 
     private fun isSupportPictureInPicture(context: ThemedReactContext): Boolean =
         checkIsApiSupport() && checkIsSystemSupportPIP(context) && checkIsUserAllowPIP(context)
