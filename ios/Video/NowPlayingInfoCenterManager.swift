@@ -7,7 +7,7 @@ class NowPlayingInfoCenterManager {
     private let SEEK_INTERVAL_SECONDS: Double = 10
 
     private weak var currentPlayer: AVPlayer?
-    private var players = NSHashTable<AVPlayer>.weakObjects()
+    private weak var players = NSHashTable<AVPlayer>.weakObjects()
 
     private var observers: [Int: NSKeyValueObservation] = [:]
     private var playbackObserver: Any?
@@ -39,7 +39,7 @@ class NowPlayingInfoCenterManager {
     }
 
     func registerPlayer(player: AVPlayer) {
-        if players.contains(player) {
+        if (players?.contains(player) ?? false) {
             return
         }
 
@@ -52,7 +52,7 @@ class NowPlayingInfoCenterManager {
         }
 
         observers[player.hashValue] = observePlayers(player: player)
-        players.add(player)
+        players?.add(player)
 
         if currentPlayer == nil {
             setCurrentPlayer(player: player)
@@ -60,7 +60,8 @@ class NowPlayingInfoCenterManager {
     }
 
     func removePlayer(player: AVPlayer) {
-        if !players.contains(player) {
+        guard let player = player else { return }
+        if !(players?.contains(player) ?? false) {
             return
         }
 
@@ -69,21 +70,21 @@ class NowPlayingInfoCenterManager {
         }
 
         observers.removeValue(forKey: player.hashValue)
-        players.remove(player)
+        players?.remove(player)
 
         if currentPlayer == player {
             currentPlayer = nil
             updateNowPlayingInfo()
         }
 
-        if players.allObjects.isEmpty {
+        if (players?.allObjects.isEmpty ?? false) {
             cleanup()
         }
     }
 
     public func cleanup() {
         observers.removeAll()
-        players.removeAllObjects()
+        players?.removeAllObjects()
 
         if let playbackObserver {
             currentPlayer?.removeTimeObserver(playbackObserver)
@@ -254,7 +255,7 @@ class NowPlayingInfoCenterManager {
     }
 
     private func findNewCurrentPlayer() {
-        if let newPlayer = players.allObjects.first(where: {
+        if let newPlayer = players?.allObjects.first(where: {
             $0.rate != 0
         }) {
             setCurrentPlayer(player: newPlayer)

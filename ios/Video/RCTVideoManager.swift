@@ -86,6 +86,18 @@ class RCTVideoManager: RCTViewManager {
         })
     }
 
+    /*
+     * Player - Multi Player Instance Fix
+     * Date Patch: 10 Dec 2024
+     * Author: Kaushal Gupta
+     * */
+    @objc(destroyPlayer:)
+    func destroyPlayer(_ reactTag: NSNumber) {
+        performOnVideoView(withReactTag: reactTag, callback: { videoView in
+            videoView?.clearPlayer()
+        })
+    }
+
     @objc(setSourceCmd:source:)
     func setSourceCmd(_ reactTag: NSNumber, source: NSDictionary) {
         performOnVideoView(withReactTag: reactTag, callback: { videoView in

@@ -27,6 +27,10 @@ Pod::Spec.new do |s|
   s.subspec "Video" do |ss|
     ss.source_files = "ios/Video/**/*.{h,m,swift,mm}"
 
+    # https://pulse.conviva.com/learning-center/content/sensor_developer_center/sensor_integration/ios/ios_stream_sensor.html
+    ss.ios.dependency 'ConvivaSDK','4.1.1'
+    ss.ios.dependency 'ConvivaAVFoundation', '4.1.1'
+
     if fabric_enabled
       ss.dependency "react-native-video/Fabric"
     end
@@ -34,7 +38,7 @@ Pod::Spec.new do |s|
     if defined?($RNVideoUseGoogleIMA)
       Pod::UI.puts "RNVideo: enable IMA SDK"
 
-      ss.ios.dependency 'GoogleAds-IMA-iOS-SDK', '~> 3.22.1'
+      ss.ios.dependency 'GoogleAds-IMA-iOS-SDK', '~> 3.23.0'
       ss.tvos.dependency 'GoogleAds-IMA-tvOS-SDK', '~> 4.2'
       ss.pod_target_xcconfig = {
         'OTHER_SWIFT_FLAGS' => '$(inherited) -D USE_GOOGLE_IMA'

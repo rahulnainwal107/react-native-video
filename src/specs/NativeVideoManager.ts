@@ -5,10 +5,11 @@ import type {
   UnsafeObject,
 } from 'react-native/Libraries/Types/CodegenTypes';
 import type {VideoSaveData} from '../types/video-ref';
+// import {ConvivaContentInfoProps} from '../types/video'
 
 // @TODO rename to "Spec" when applying new arch
 export interface VideoManagerType {
-  seekCmd: (reactTag: Int32, time: Float, tolerance?: Float) => Promise<void>;
+  seekCmd: (reactTag: Int32, time: Float, tolerance?: Float, seekToLive?: boolean) => Promise<void>;
   setPlayerPauseStateCmd: (reactTag: Int32, paused: boolean) => Promise<void>;
   setLicenseResultCmd: (
     reactTag: Int32,
@@ -27,6 +28,8 @@ export interface VideoManagerType {
   exitPictureInPictureCmd: (reactTag: number) => Promise<void>;
   save: (reactTag: Int32, option: UnsafeObject) => Promise<VideoSaveData>;
   getCurrentPosition: (reactTag: Int32) => Promise<Int32>;
+  destroyPlayer: (reactTag: Int32) => Promise<void>;
 }
 
 export default NativeModules.VideoManager as VideoManagerType;
+// export const ConvivaHelper = NativeModules.ConvivaHelper as ConvivaHelperTypes;

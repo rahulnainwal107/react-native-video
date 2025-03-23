@@ -1,6 +1,9 @@
 import AVFoundation
 import AVKit
 import Foundation
+// import ConvivaSDK
+import SystemConfiguration
+import CoreTelephony
 #if USE_GOOGLE_IMA
     import GoogleInteractiveMediaAds
 #endif
@@ -63,6 +66,21 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     var _showNotificationControls = false
     // Buffer last bitrate value received. Initialized to -2 to ensure -1 (sometimes reported by AVPlayer) is not missed
     private var _lastBitrate = -2.0
+
+    // Conviva
+    private var _enableConvivaVideoAnalytics:Bool = false
+    private var _convivaContentInfo: NSDictionary? = nil
+    static var _RCTConvivaHelper:RCTConvivaHelper?
+
+    // Reload Player
+    var retryErrorCodes: [NSNumber] = []
+    private var _reloadingPlayer:Bool = false
+    private var _destroyConvivaAfterReload:Bool = false
+    private var _playerReloadErrorType:NSDictionary? = nil
+
+    /* Storing Network Event */
+    private var _networkDetailsDict: [String:Any] = [:]
+
     private var _enterPictureInPictureOnLeave = false {
         didSet {
             if isPictureInPictureActive() { return }
@@ -85,6 +103,11 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     private var _isBuffering = false {
         didSet {
             onVideoBuffer?(["isBuffering": _isBuffering, "target": reactTag as Any])
+            if _isBuffering {
+                #if USE_GOOGLE_IMA
+                reportAdBuffering();
+                #endif
+            }
         }
     }
 
@@ -283,6 +306,27 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         #endif
     }
 
+    /*
+     * Player - Multi Player Instance Fix
+     * Date Patch: 10 Dec 2024
+     * Author: Kaushal Gupta
+     * */
+    @objc func clearPlayer() {
+        NotificationCenter.default.removeObserver(self)
+        self.removePlayerLayer()
+        _playerObserver.clearPlayer()
+        if let player = _player {
+            NowPlayingInfoCenterManager.shared.removePlayer(player: player)
+        }
+        
+        #if os(iOS)
+        _pip = nil
+        #endif
+        // adding remove observer - for Network Detection - ALC-3097
+        removeObservers()
+        // end - for Network Detection - ALC-3097
+    }
+
     deinit {
         #if USE_GOOGLE_IMA
             _imaAdsManager.releaseAds()
@@ -301,7 +345,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         #if os(iOS)
             _pip = nil
         #endif
-
+        removeObservers()
         ReactNativeVideoManager.shared.unregisterView(newInstance: self)
         AudioSessionManager.shared.unregisterView(view: self)
     }
@@ -416,6 +460,10 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             // If we dont use Ads and onVideoProgress is not defined we dont need to run this code
             guard onVideoProgress != nil else { return }
         #endif
+
+        // adding to check signal strength - ALC-3097
+        let networktype = self.getSignalStrength()
+        // end - ALC-3097
 
         if let video = _player?.currentItem,
            video.status != AVPlayerItem.Status.readyToPlay {
@@ -550,6 +598,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
 
         if _player == nil {
             _player = AVPlayer()
+            // initConvivaAnalyticsSession()
             ReactNativeVideoManager.shared.onInstanceCreated(id: instanceId, player: _player as Any)
 
             _player!.replaceCurrentItem(with: playerItem)
@@ -578,6 +627,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
 
         _playerObserver.player = _player
         applyModifiers()
+        addObservers()
         _player?.actionAtItemEnd = .none
 
         if #available(iOS 10.0, *) {
@@ -811,6 +861,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             if _adPlaying {
                 #if USE_GOOGLE_IMA
                     _imaAdsManager.getAdsManager()?.pause()
+                    // reportAdPaused();
                 #endif
             } else {
                 _player?.pause()
@@ -820,6 +871,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             if _adPlaying {
                 #if USE_GOOGLE_IMA
                     _imaAdsManager.getAdsManager()?.resume()
+                    // reportAdPlaying();
                 #endif
             } else {
                 if #available(iOS 10.0, *), !_automaticallyWaitsToMinimizeStalling {
@@ -837,26 +889,42 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     }
 
     @objc
-    func setSeek(_ time: NSNumber, _ tolerance: NSNumber) {
+    func setSeek(_ time: NSNumber, _ tolerance: NSNumber, seekToLive:Bool) {
         let item: AVPlayerItem? = _player?.currentItem
-
         _pendingSeek = true
-
+        // if(_enableConvivaVideoAnalytics == true){
+        //     RCTVideo._RCTConvivaHelper?.reportSeekStarted(value: seekTime.floatValue)
+        // }
+        // if(_enableConvivaVideoAnalytics == true){
+        //     RCTVideo._RCTConvivaHelper?.reportSeekStarted(value: seekTime.floatValue)
+        // }
         guard item != nil, let player = _player, let item, item.status == AVPlayerItem.Status.readyToPlay else {
             _pendingSeekTime = time.floatValue
             return
         }
-
+        // Calculation for live seek
+        var livePosition = 0.0
+        if(seekToLive == true){
+            let timeRange:CMTimeRange = player.currentItem?.seekableTimeRanges.last as! CMTimeRange
+            if(!timeRange.isEmpty){
+                let start = timeRange.start.seconds
+                let totalDuration = timeRange.duration.seconds
+                livePosition = start + totalDuration;
+            }
+        }
         RCTPlayerOperations.seek(
             player: player,
             playerItem: item,
             paused: _paused,
-            seekTime: time.floatValue,
+            seekTime: seekToLive == true ? Float(livePosition) : seekTime.floatValue,
             seekTolerance: tolerance.floatValue
         ) { [weak self] (_: Bool) in
             guard let self else { return }
 
             self._playerObserver.addTimeObserverIfNotSet()
+            // if(_enableConvivaVideoAnalytics == true){
+            //     RCTVideo._RCTConvivaHelper?.reportSeekEnded(value: seekTime.floatValue)
+            // }
             self.setPaused(self._paused)
             self.onVideoSeek?(["currentTime": NSNumber(value: Float(CMTimeGetSeconds(item.currentTime()))),
                                "seekTime": time,
@@ -1495,6 +1563,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             }
 
             if onVideoLoad != nil, self._videoLoadStarted {
+                _reloadingPlayer = false;
                 var duration = Float(CMTimeGetSeconds(_playerItem.asset.duration))
 
                 if duration.isNaN || duration == 0 {
@@ -1554,10 +1623,24 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         }
 
         guard let _playerItem else { return }
+        let errorCode = NSNumber(value: (_playerItem.error! as NSError).code)
+        if retryErrorCodes.count == 0 {
+            if let playerReloadErrorTypeDict = _playerReloadErrorType as? [String: String] {
+                for key in playerReloadErrorTypeDict.keys {
+                    if let errorCode = Int(key) {
+                        // Convert the string key to an NSNumber and append to the array
+                        retryErrorCodes.append(NSNumber(value: errorCode))
+                    }
+                }
+            }
+        }
+        if(_reloadingPlayer == false && retryErrorCodes.contains(Int(errorCode) as NSNumber)){
+            _reloadingPlayer = true;
+        }
         onVideoError?(
             [
                 "error": [
-                    "code": NSNumber(value: (_playerItem.error! as NSError).code),
+                    "code": errorCode,
                     "localizedDescription": _playerItem.error?.localizedDescription == nil ? "" : _playerItem.error?.localizedDescription as Any,
                     "localizedFailureReason": ((_playerItem.error! as NSError).localizedFailureReason == nil ?
                         "" : (_playerItem.error! as NSError).localizedFailureReason) ?? "",
@@ -1677,10 +1760,25 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         guard onVideoError != nil else { return }
 
         let error: NSError! = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? NSError
+        let errorCode = NSNumber(value: (error as NSError).code)
+        let errorCode = NSNumber(value: (error as NSError).code)
+        if retryErrorCodes.count == 0 {
+            if let playerReloadErrorTypeDict = _playerReloadErrorType as? [String: String] {
+                for key in playerReloadErrorTypeDict.keys {
+                    if let errorCode = Int(key) {
+                        // Convert the string key to an NSNumber and append to the array
+                        retryErrorCodes.append(NSNumber(value: errorCode))
+                    }
+                }
+            }
+        }
+        if(_reloadingPlayer == false && retryErrorCodes.contains(Int(errorCode) as NSNumber)){
+            _reloadingPlayer = true;
+        }
         onVideoError?(
             [
                 "error": [
-                    "code": NSNumber(value: (error as NSError).code),
+                    "code": errorCode,
                     "localizedDescription": error.localizedDescription,
                     "localizedFailureReason": (error as NSError).localizedFailureReason ?? "",
                     "localizedRecoverySuggestion": (error as NSError).localizedRecoverySuggestion ?? "",
@@ -1736,6 +1834,9 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             _lastBitrate = lastEvent.indicatedBitrate
             onVideoBandwidthUpdate?(["bitrate": _lastBitrate, "target": reactTag as Any])
         }
+        // #if USE_GOOGLE_IMA
+        // reportAdBitrate(value: lastEvent.observedBitrate)
+        // #endif
     }
 
     func handleTracksChange(playerItem _: AVPlayerItem, change _: NSKeyValueObservedChange<[AVPlayerItemTrack]>) {
@@ -1805,4 +1906,233 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     // Workaround for #3418 - https://github.com/TheWidlarzGroup/react-native-video/issues/3418#issuecomment-2043508862
     @objc
     func setOnClick(_: Any) {}
+
+        /**
+         Conviva methods starts here
+         */
+        @objc
+        func setEnableConvivaVideoAnalytics(_ enableConvivaVideoAnalytics:Bool) {
+            _enableConvivaVideoAnalytics = enableConvivaVideoAnalytics;
+        }
+    
+        @objc
+        func setConvivaContentInfo(_ convivaContentInfo:NSDictionary) {
+            _convivaContentInfo = convivaContentInfo;
+        }
+    
+        @objc
+        func initConvivaAnalyticsSession(){
+            if(_enableConvivaVideoAnalytics == true && _reloadingPlayer == false){
+//                if(RCTVideo._RCTConvivaHelper == nil){
+//                    RCTVideo._RCTConvivaHelper = RCTConvivaHelper()
+//                }else{
+//                    destroyConvivaAnalyticsSession()
+//                }
+//                RCTVideo._RCTConvivaHelper?.setPlayerReference(RCTVideo._RCTConvivaHelper?._buildVideoAnalytics(), newPlayer: _player,convivaContentInfo: _convivaContentInfo as! [String : Any])
+            }
+        }
+    
+        @objc
+        func destroyConvivaAnalyticsSession(){
+            if(_enableConvivaVideoAnalytics == true && (!_reloadingPlayer || _reloadingPlayer && _destroyConvivaAfterReload == true)){
+//                RCTVideo._RCTConvivaHelper?._reportAdEnded()
+//                RCTVideo._RCTConvivaHelper?.releaseVideoAdAnalytics();
+//                RCTVideo._RCTConvivaHelper?.reportPlaybackEnded()
+//                RCTVideo._RCTConvivaHelper?.releaseVideoAnalytics()
+//                RCTVideo._RCTConvivaHelper = nil;
+            }
+        }
+    
+        @objc
+        func reportAdPlaying(){
+//            RCTVideo._RCTConvivaHelper?.reportAdMetric(_key: CIS_SSDK_PLAYBACK_METRIC_PLAYER_STATE, _value:PlayerState.CONVIVA_PLAYING.rawValue)
+        }
+    
+        @objc
+        func reportAdPaused(){
+//            RCTVideo._RCTConvivaHelper?.reportAdMetric(_key: CIS_SSDK_PLAYBACK_METRIC_PLAYER_STATE, _value:PlayerState.CONVIVA_PAUSED.rawValue)
+        }
+    
+        @objc
+        func reportAdBuffering(){
+//            RCTVideo._RCTConvivaHelper?.reportAdMetric(_key: CIS_SSDK_PLAYBACK_METRIC_PLAYER_STATE, _value:PlayerState.CONVIVA_BUFFERING.rawValue)
+        }
+    
+        @objc
+        func reportAdBitrate(value:Any){
+//            RCTVideo._RCTConvivaHelper?.reportAdMetric(_key: CIS_SSDK_PLAYBACK_METRIC_BITRATE, _value:value)
+        }
+        /**
+         Conviva methods Ends here
+         */
+    /**
+     Reload Player
+     */
+    @objc
+    func setIsReloadingPlayer(_ isReloadingPlayer:Bool){
+        //print("isReloadingPlayer --- native ",isReloadingPlayer)
+        _reloadingPlayer = isReloadingPlayer;
+    }
+    
+    @objc
+    func setDistroyConvivaAfterReload(_ destroyConvivaAfterReload:Bool){
+        //print("destroyConvivaAfterReload --- native ",destroyConvivaAfterReload)
+        _destroyConvivaAfterReload = destroyConvivaAfterReload;
+    }
+    
+    @objc
+    func setPlayerReloadErrorType(_ playerReloadErrorType:NSDictionary){
+        //print("playerReloadErrorType --- native ",playerReloadErrorType)
+        _playerReloadErrorType = playerReloadErrorType;
+    }
+    /**
+     Reload Player
+     */
+    
+    
+    // MARK: - Adding Network Detection - ALC-3097 - 22 JAN 2025
+    
+       /*
+        * Player -Low Network Detection (ALC-3097)
+        * Date Patch: 22 Jan 2025
+        * Author: Vibhash Kumar
+        * */
+       
+       func getSignalStrength() -> Int? {
+           
+               let networkInfo = CTTelephonyNetworkInfo()
+               guard let carrier = networkInfo.serviceCurrentRadioAccessTechnology else { return nil }
+               for (_, radioAccess) in carrier {
+                   switch radioAccess {
+                   case CTRadioAccessTechnologyLTE:
+                       return getLTESignalStrength() // Implement this using private APIs if necessary (requires specific entitlements).
+                   case CTRadioAccessTechnologyWCDMA, CTRadioAccessTechnologyHSDPA, CTRadioAccessTechnologyHSUPA, CTRadioAccessTechnologyCDMA1x, CTRadioAccessTechnologyCDMAEVDORev0, CTRadioAccessTechnologyCDMAEVDORevA, CTRadioAccessTechnologyCDMAEVDORevB:
+                       return 2 // Rough estimate of moderate signal strength for 3G networks.
+                   case CTRadioAccessTechnologyGPRS, CTRadioAccessTechnologyEdge:
+                       return 1 // Low signal strength for 2G networks.
+                   default:
+                       return nil
+                   }
+               }
+               return nil
+           }
+           func getLTESignalStrength() -> Int {
+               // Note: This requires private API usage or specific entitlements, which might not be App Store safe.
+               // Apple doesn't officially support accessing raw signal strength values in public APIs.
+               return -1 // Placeholder for actual implementation.
+           }
+       
+       private func addObservers() {
+           _player?.addObserver(self, forKeyPath: "timeControlStatus", options: [.new, .old], context: nil)
+           _player?.addObserver(self, forKeyPath: "currentItem.loadedTimeRanges", options: [.new, .old], context: nil)
+           _player?.addObserver(self, forKeyPath: "currentItem.playbackBufferEmpty", options: [.new, .old], context: nil)
+           _player?.addObserver(self, forKeyPath: "currentItem.playbackLikelyToKeepUp", options: [.new, .old], context: nil)
+       }
+       
+       private func removeObservers() {
+           _player?.removeObserver(self, forKeyPath: "timeControlStatus")
+           _player?.removeObserver(self, forKeyPath: "currentItem.loadedTimeRanges")
+           _player?.removeObserver(self, forKeyPath: "currentItem.playbackBufferEmpty")
+           _player?.removeObserver(self, forKeyPath: "currentItem.playbackLikelyToKeepUp")
+       }
+       
+       
+       override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+           analyzeNetworkSpeedAndType(for: _player?.currentItem) {[weak self] newDict in
+               guard let self else { return }
+               var dict : [String: String] = newDict ?? [:]
+              
+               switch keyPath {
+               case "timeControlStatus":
+                   if _player?.timeControlStatus == .waitingToPlayAtSpecifiedRate {
+                       dict["packetStatus"] = "Network: weak"
+                   }
+               case "currentItem.loadedTimeRanges":
+                   if let timeRange = _player?.currentItem?.loadedTimeRanges.first?.timeRangeValue {
+                       let bufferedTime = CMTimeGetSeconds(timeRange.end)
+                       let currentTime = CMTimeGetSeconds(_player?.currentTime() ?? CMTime(value: 0, timescale: 1))
+                       
+                       dict["packetStatus"] = "Network: stable"
+                       dict["bufferTime"] = "\(bufferedTime - currentTime)"
+                   }
+               case "currentItem.playbackBufferEmpty":
+                   dict["packetStatus"] = "Network: weak"
+               case "currentItem.playbackLikelyToKeepUp":
+                   dict["packetStatus"] = "Network: stable"
+               default:
+                   break
+               }
+               _networkDetailsDict = dict
+               debugPrint("---o", _networkDetailsDict);
+               NotificationCenter.default.post(name: Notification.Name("NetworkData"), object: nil, userInfo: dict)
+              
+           }
+           
+       }
+       
+       func analyzeNetworkSpeedAndType(for playerItem: AVPlayerItem?, completion: @escaping ([String: String]?) -> Void) {
+           // First, check the network type (WiFi or Cellular)
+           checkReachability { networkType in
+               // Now, let's calculate the download speed from the access log
+               guard let accessLog = playerItem?.accessLog(), let lastEvent = accessLog.events.last else {
+                   debugPrint("No access log available.")
+                   return
+               }
+               let bytesTransferred = lastEvent.numberOfBytesTransferred
+               let transferDuration = lastEvent.transferDuration
+               // Ensure transferDuration is positive to avoid division by zero
+               guard transferDuration > 0 else {
+                   debugPrint("Transfer duration is zero or unknown.")
+                   return
+               }
+               let downloadSpeedKBps = Double(bytesTransferred) / transferDuration / 1024 // Convert to KB/s
+               let speed = String(format: "%.2f", downloadSpeedKBps)
+               
+               let cellularNetworkType = self.categorizeNetworkSpeed(downloadSpeedKBps: downloadSpeedKBps)
+               var dict : [String: String] = [:]
+               dict["downloadTime"] = "\(transferDuration)"
+               dict["size"] = "\(bytesTransferred)"
+               dict["reachability"] = networkType
+               dict["networkType"] = cellularNetworkType
+               dict["downloadSpeedKBps"] = speed
+               
+               completion(dict)
+           }
+       }
+       
+       func categorizeNetworkSpeed(downloadSpeedKBps: Double) -> String {
+           if downloadSpeedKBps <= 2000 {
+               return "3G"
+           } else if downloadSpeedKBps > 2000 && downloadSpeedKBps <= 20000 {
+               return "4G"
+           } else {
+               return "5G"
+           }
+       }
+      
+       func checkReachability(completion: @escaping (String) -> Void) {
+           let reachability = SCNetworkReachabilityCreateWithName(nil, "www.apple.com")
+           var flags = SCNetworkReachabilityFlags()
+           if SCNetworkReachabilityGetFlags(reachability!, &flags) {
+               if flags.contains(.reachable) {
+                   if flags.contains(.isWWAN) {
+                       completion("Cellular")
+                   } else {
+                       completion("WiFi")
+                   }
+               } else {
+                   completion("No Network")
+               }
+           } else {
+               completion("Unknown")
+           }
+       }
+       
+       /*
+        * Player -Low Network Detection (ALC-3097)
+        * Date Patch: 22 Jan 2025
+        * */
+
+    
+    // MARK: - END of Network Detection - ALC-3097
 }

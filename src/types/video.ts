@@ -349,4 +349,30 @@ export interface ReactVideoProps extends ReactVideoEvents, ViewProps {
   debug?: DebugConfig;
   allowsExternalPlayback?: boolean; // iOS
   controlsStyles?: ControlsStyles; // Android
+  // Conviva props 
+  enableConvivaVideoAnalytics?: boolean;
+  convivaContentInfo?: ConvivaContentInfoProps;
+  // Reload Player
+  isReloadingPlayer?: boolean;
+  destroyConvivaAfterReload?: boolean;
+  playerReloadErrorType?: playerReloadErrorType;
+  // extension Renderer Mode (only for Android)
+  extensionRendererMode?: Number;
+  // Set initial bitrate (only for Android)
+  initialBitrateEstimate?: Number;
 }
+
+// Conviva props 
+export type ConvivaContentInfoProps = {
+  my_custom_tag_key?: string,
+  "Conviva.isLive"?: boolean,
+  "Conviva.viewerId"?: string,
+  "Conviva.playerName"?: string,
+  "c3.cm.contentType"?: string,
+  "Conviva.assetName"?: string,
+  "Conviva.streamUrl"?: string,
+};
+
+export type playerReloadErrorType = {
+  [key: string]: string;
+};

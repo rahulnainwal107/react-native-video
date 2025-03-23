@@ -86,8 +86,26 @@
         }
 
         func adsLoader(_: IMAAdsLoader, failedWith adErrorData: IMAAdLoadingErrorData) {
-            if adErrorData.adError.message != nil {
-                print("Error loading ads: " + adErrorData.adError.message!)
+            if let errorMessage = adErrorData.adError.message {
+                print("Error loading ads: \(errorMessage)")
+            } else {
+                print("Error loading ads: Unknown error.")
+            }
+            
+            // Create event data dictionary
+            var eventData: [String: Any] = [
+                "event": "ERROR",
+                "data": [
+                    "message": adErrorData.adError.message ?? "Unknown error",
+                    "code": adErrorData.adError.code,
+                    "type": adErrorData.adError.type
+                ],
+                "target": _video?.reactTag ?? 0
+            ]
+            
+            // Send the event data to _video.onReceiveAdEvent
+            if let onReceiveAdEvent = _video?.onReceiveAdEvent {
+                onReceiveAdEvent(eventData)
             }
 
             _video?.setPaused(false)
@@ -108,21 +126,43 @@
                 }
                 adsManager.start()
             }
-
+            let adInfo = [
+                "adId": event.ad?.adId ?? "",
+                "adTitle": event.ad?.adTitle ?? "",
+                "adSystem": event.ad?.adSystem ?? "",
+                "adDescription": event.ad?.adDescription ?? "",
+                "duration": event.ad?.duration ?? "",
+                "skippable": event.ad?.isSkippable ?? "",
+                "contentType": event.ad?.contentType ?? "",
+                "VASTMediaWidth": event.ad?.vastMediaWidth ?? "",
+                "VASTMediaHeight": event.ad?.vastMediaHeight ?? "",
+                "VASTMediaBitrate": event.ad?.vastMediaBitrate ?? "",
+                "universalAdIdValue": event.ad?.universalAdIdValue ?? "",
+                "universalAdIdRegistry": event.ad?.universalAdIdRegistry ?? "",
+                "adPosition":event.ad?.adPodInfo.adPosition ?? ""
+            ] as [String : Any]
             if _video.onReceiveAdEvent != nil {
                 let type = convertEventToString(event: event.type)
 
                 if event.adData != nil {
-                    _video.onReceiveAdEvent?([
+                    var eventData: [String: Any] = [
                         "event": type,
                         "data": event.adData ?? [String](),
-                        "target": _video.reactTag!,
-                    ])
+                        "target": _video.reactTag!
+                    ]
+                    if type == "LOADED" || type == "STARTED" || type == "UNKNOWN" {
+                        eventData["adInfo"] = adInfo
+                    }
+                    _video.onReceiveAdEvent?(eventData)
                 } else {
-                    _video.onReceiveAdEvent?([
+                    var eventData: [String: Any] = [
                         "event": type,
                         "target": _video.reactTag!,
-                    ])
+                    ]
+                    if type == "LOADED" || type == "STARTED" || type == "UNKNOWN" {
+                        eventData["adInfo"] = adInfo
+                    }
+                    _video.onReceiveAdEvent?(eventData);
                 }
             }
         }
@@ -214,6 +254,8 @@
                 result = "TAPPED"
             case .THIRD_QUARTILE:
                 result = "THIRD_QUARTILE"
+            case .ICON_TAPPED:
+                result = "ICON_TAPPED"
             default:
                 result = "UNKNOWN"
             }

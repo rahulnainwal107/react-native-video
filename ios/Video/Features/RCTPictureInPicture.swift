@@ -14,6 +14,10 @@ import React
         private var _isPictureInPictureActive: Bool {
             return _pipController?.isPictureInPictureActive ?? false
         }
+        
+        var isInitialized: Bool {
+            return _pipController != nil
+        }
 
         init(
             _ onPictureInPictureEnter: (() -> Void)? = nil,

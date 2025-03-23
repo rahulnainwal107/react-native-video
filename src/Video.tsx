@@ -336,7 +336,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
       };
     }, [selectedVideoTrack]);
 
-    const seek = useCallback(async (time: number, tolerance?: number) => {
+    const seek = useCallback(async (time: number, tolerance?: number, seekToLive?: boolean) => {
       if (isNaN(time) || time === null) {
         throw new Error("Specified time is not a number: '" + time + "'");
       }
@@ -351,6 +351,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
           getReactTag(nativeRef),
           time,
           tolerance || 0,
+          seekToLive || false
         );
       };
 
@@ -441,6 +442,15 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         android: _exitPictureInPicture,
         default: () => {},
       })();
+    }, []);
+
+    /*
+    * Player - Multi Player Instance Fix
+    * Date Patch: 10 Dec 2024
+    * Author: Kaushal Gupta
+    * */
+    const destroyPlayer = useCallback(async () => {
+      NativeVideoManager?.destroyPlayer?.(getReactTag(nativeRef));
     }, []);
 
     const save = useCallback((options: object) => {
@@ -694,6 +704,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         enterPictureInPicture,
         exitPictureInPicture,
         setSource,
+        destroyPlayer,
       }),
       [
         seek,
@@ -709,6 +720,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         enterPictureInPicture,
         exitPictureInPicture,
         setSource,
+        destroyPlayer,
       ],
     );
 

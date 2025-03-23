@@ -87,4 +87,14 @@ RCT_EXTERN_METHOD(getCurrentPosition
                   : (RCTPromiseResolveBlock)resolve reject
                   : (RCTPromiseRejectBlock)reject)
 
+// Conviva
+RCT_EXPORT_VIEW_PROPERTY(enableConvivaVideoAnalytics, BOOL);
+RCT_EXPORT_VIEW_PROPERTY(convivaContentInfo, NSDictionary);
+// Reload Player
+RCT_EXPORT_VIEW_PROPERTY(isReloadingPlayer, BOOL);
+RCT_EXPORT_VIEW_PROPERTY(destroyConvivaAfterReload, BOOL);
+RCT_EXPORT_VIEW_PROPERTY(playerReloadErrorType, NSDictionary);
+
+RCT_EXTERN_METHOD(destroyPlayer: (nonnull NSNumber*)reactTag)
+
 @end

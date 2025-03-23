@@ -6,7 +6,7 @@ export type VideoSaveData = {
 };
 
 export interface VideoRef {
-  seek: (time: number, tolerance?: number) => void;
+  seek: (time: number, tolerance?: number, seekToLive?:boolean) => void;
   resume: () => void;
   pause: () => void;
   presentFullscreenPlayer: () => void;
@@ -21,5 +21,6 @@ export interface VideoRef {
   setSource: (source?: ReactVideoSource) => void;
   enterPictureInPicture: () => void;
   exitPictureInPicture: () => void;
+  destroyPlayer: () => void;
   nativeHtmlVideoRef?: RefObject<HTMLVideoElement>; // web only
 }
