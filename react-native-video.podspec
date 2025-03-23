@@ -28,8 +28,8 @@ Pod::Spec.new do |s|
     ss.source_files = "ios/Video/**/*.{h,m,swift,mm}"
 
     # https://pulse.conviva.com/learning-center/content/sensor_developer_center/sensor_integration/ios/ios_stream_sensor.html
-    ss.ios.dependency 'ConvivaSDK','4.1.1'
-    ss.ios.dependency 'ConvivaAVFoundation', '4.1.1'
+    ss.ios.dependency 'ConvivaSDK','4.0.40'
+    ss.ios.dependency 'ConvivaAVFoundation', '4.0.46'
 
     if fabric_enabled
       ss.dependency "react-native-video/Fabric"
