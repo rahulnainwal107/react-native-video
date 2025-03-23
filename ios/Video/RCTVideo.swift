@@ -70,7 +70,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     // Conviva
     private var _enableConvivaVideoAnalytics:Bool = false
     private var _convivaContentInfo: NSDictionary? = nil
-    static var _RCTConvivaHelper:RCTConvivaHelper?
+//    static var _RCTConvivaHelper:RCTConvivaHelper?
 
     // Reload Player
     var retryErrorCodes: [NSNumber] = []
@@ -916,7 +916,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             player: player,
             playerItem: item,
             paused: _paused,
-            seekTime: seekToLive == true ? Float(livePosition) : seekTime.floatValue,
+            seekTime: seekToLive == true ? Float(livePosition) : time.floatValue,
             seekTolerance: tolerance.floatValue
         ) { [weak self] (_: Bool) in
             guard let self else { return }
@@ -1553,12 +1553,12 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         guard let source = _source else { return }
         Task {
             if self._pendingSeek {
-                self.setSeek(NSNumber(value: self._pendingSeekTime), NSNumber(value: 100))
+                self.setSeek(NSNumber(value: self._pendingSeekTime), NSNumber(value: 100),seekToLive: false)
                 self._pendingSeek = false
             }
 
             if self._startPosition >= 0 {
-                self.setSeek(NSNumber(value: self._startPosition), NSNumber(value: 100))
+                self.setSeek(NSNumber(value: self._startPosition), NSNumber(value: 100),seekToLive: false)
                 self._startPosition = -1
             }
 
@@ -1760,7 +1760,6 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         guard onVideoError != nil else { return }
 
         let error: NSError! = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? NSError
-        let errorCode = NSNumber(value: (error as NSError).code)
         let errorCode = NSNumber(value: (error as NSError).code)
         if retryErrorCodes.count == 0 {
             if let playerReloadErrorTypeDict = _playerReloadErrorType as? [String: String] {

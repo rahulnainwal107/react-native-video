@@ -30,10 +30,10 @@ class RCTVideoManager: RCTViewManager {
         }
     }
 
-    @objc(seekCmd:time:tolerance:)
-    func seekCmd(_ reactTag: NSNumber, time: NSNumber, tolerance: NSNumber) {
+    @objc(seekCmd:time:tolerance:seekToLive:)
+    func seekCmd(_ reactTag: NSNumber, time: NSNumber, tolerance: NSNumber, seekToLive: Bool) {
         performOnVideoView(withReactTag: reactTag, callback: { videoView in
-            videoView?.setSeek(time, tolerance)
+            videoView?.setSeek(time, tolerance, seekToLive: seekToLive)
         })
     }
 

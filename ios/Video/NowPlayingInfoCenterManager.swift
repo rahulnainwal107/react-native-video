@@ -60,7 +60,7 @@ class NowPlayingInfoCenterManager {
     }
 
     func removePlayer(player: AVPlayer) {
-        guard let player = player else { return }
+        // guard let player = player else { return }
         if !(players?.contains(player) ?? false) {
             return
         }
