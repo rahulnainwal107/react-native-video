@@ -73,6 +73,15 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
       [onSeek],
     );
 
+    /*
+        * Player - Multi Player Instance Fix
+        * Date Patch: 10 Dec 2024
+        * Author: Kaushal Gupta
+        * */
+        const destroyPlayer = useCallback(async () => {
+          // NativeVideoManager?.destroyPlayer?.(getReactTag(nativeRef));
+        }, []);
+
     const [src, setSource] = useState(source);
     const currentSourceProp = useRef(source);
     useEffect(() => {
@@ -223,6 +232,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         exitPictureInPicture,
         restoreUserInterfaceForPictureInPictureStopCompleted: unsupported,
         nativeHtmlVideoRef: nativeRef,
+        destroyPlayer,
       }),
       [
         seek,
@@ -238,6 +248,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         setFullScreen,
         enterPictureInPicture,
         exitPictureInPicture,
+        destroyPlayer
       ],
     );
 
