@@ -349,7 +349,7 @@ export interface ReactVideoProps extends ReactVideoEvents, ViewProps {
   debug?: DebugConfig;
   allowsExternalPlayback?: boolean; // iOS
   controlsStyles?: ControlsStyles; // Android
-  // Conviva props 
+  // Conviva props
   enableConvivaVideoAnalytics?: boolean;
   convivaContentInfo?: ConvivaContentInfoProps;
   // Reload Player
@@ -357,20 +357,20 @@ export interface ReactVideoProps extends ReactVideoEvents, ViewProps {
   destroyConvivaAfterReload?: boolean;
   playerReloadErrorType?: playerReloadErrorType;
   // extension Renderer Mode (only for Android)
-  extensionRendererMode?: Number;
+  extensionRendererMode?: number;
   // Set initial bitrate (only for Android)
-  initialBitrateEstimate?: Number;
+  initialBitrateEstimate?: number;
 }
 
-// Conviva props 
+// Conviva props
 export type ConvivaContentInfoProps = {
   my_custom_tag_key?: string,
-  "Conviva.isLive"?: boolean,
-  "Conviva.viewerId"?: string,
-  "Conviva.playerName"?: string,
-  "c3.cm.contentType"?: string,
-  "Conviva.assetName"?: string,
-  "Conviva.streamUrl"?: string,
+  'Conviva.isLive'?: boolean,
+  'Conviva.viewerId'?: string,
+  'Conviva.playerName'?: string,
+  'c3.cm.contentType'?: string,
+  'Conviva.assetName'?: string,
+  'Conviva.streamUrl'?: string,
 };
 
 export type playerReloadErrorType = {

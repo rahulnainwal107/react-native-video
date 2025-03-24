@@ -12,6 +12,7 @@ import com.brentvatne.common.api.ViewType
 import com.brentvatne.common.react.EventTypes
 import com.brentvatne.common.toolbox.DebugLog
 import com.brentvatne.common.toolbox.ReactBridgeUtils
+import com.brentvatne.react.ConvivaHelper
 import com.brentvatne.react.ReactNativeVideoManager
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.ThemedReactContext
@@ -307,10 +308,10 @@ class ReactExoplayerViewManager(private val config: ReactExoplayerConfig) : View
 
     @ReactProp(name = PROP_CONVIVA_CONTENT_INFO)
     fun setConvivaContentInfo(videoView: ReactExoplayerView, @Nullable convivaContentInfo: ReadableMap?) {
-//        if (convivaContentInfo != null) {
-//            val _convivaContentInfo: Map<String, Any> = ConvivaHelper.readableMapToHashMap(convivaContentInfo)
-//            videoView.setConvivaContentInfo(_convivaContentInfo)
-//        }
+        if (convivaContentInfo != null) {
+            val _convivaContentInfo: Map<String, Any?> = ConvivaHelper.readableMapToHashMap(convivaContentInfo)
+            videoView.setConvivaContentInfo(_convivaContentInfo)
+        }
     }
 
     // Reload Player
@@ -326,9 +327,9 @@ class ReactExoplayerViewManager(private val config: ReactExoplayerConfig) : View
 
     @ReactProp(name = PROP_PLAYER_RELOAD_ERROR_TYPE)
     fun setPlayerReloadErrorType(videoView: ReactExoplayerView, @Nullable playerReloadErrorType: ReadableMap?) {
-//        if (playerReloadErrorType != null) {
-//            val errorObject: Map<String, Any> = ConvivaHelper.readableMapToHashMap(playerReloadErrorType)
-//            videoView.setPlayerReloadErrorType(errorObject)
-//        }
+        if (playerReloadErrorType != null) {
+            val errorObject: Map<String, Any?> = ConvivaHelper.readableMapToHashMap(playerReloadErrorType)
+            videoView.setPlayerReloadErrorType(errorObject)
+        }
     }
 }

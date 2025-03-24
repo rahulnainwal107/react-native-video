@@ -28,6 +28,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.accessibility.CaptioningManager;
@@ -133,6 +134,7 @@ import com.brentvatne.react.ReactNativeVideoManager;
 import com.brentvatne.receiver.AudioBecomingNoisyReceiver;
 import com.brentvatne.receiver.BecomingNoisyListener;
 import com.brentvatne.receiver.PictureInPictureReceiver;
+import com.conviva.sdk.ConvivaSdkConstants;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.UiThreadUtil;
@@ -162,7 +164,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-//import com.brentvatne.react.ConvivaHelper;
+import com.brentvatne.react.ConvivaHelper;
 
 @SuppressLint("ViewConstructor")
 public class ReactExoplayerView extends FrameLayout implements
@@ -297,9 +299,9 @@ public class ReactExoplayerView extends FrameLayout implements
     private int initialBitrateEstimate = 1000000;
 
     // Conviva
-//    private long playerInitTime;
-//    private boolean enableConvivaVideoAnalytics;
-//    private Map<String, Object> convivaContentInfo;
+    private long playerInitTime;
+    private boolean enableConvivaVideoAnalytics;
+    private Map<String, Object> convivaContentInfo;
     private long playerReleaseTimeoutMs;
 
     // Reload Player
@@ -481,9 +483,9 @@ public class ReactExoplayerView extends FrameLayout implements
         if (mReportBandwidth) {
             if (player == null) {
                 eventEmitter.onVideoBandwidthUpdate.invoke(bitrate, 0, 0, null);
-//                if (isPlayingAd()) {
-//                    ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.BITRATE, 0);
-//                }
+                if (isPlayingAd()) {
+                    ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.BITRATE, 0);
+                }
             } else {
                 Format videoFormat = player.getVideoFormat();
                 boolean isRotatedContent = videoFormat != null && (videoFormat.rotationDegrees == 90 || videoFormat.rotationDegrees == 270);
@@ -491,9 +493,9 @@ public class ReactExoplayerView extends FrameLayout implements
                 int height = videoFormat != null ? (isRotatedContent ? videoFormat.width : videoFormat.height) : 0;
                 String trackId = videoFormat != null ? videoFormat.id : null;
                 eventEmitter.onVideoBandwidthUpdate.invoke(bitrate, height, width, trackId);
-//                if (isPlayingAd()) {
-//                    ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.BITRATE, height);
-//                }
+                if (isPlayingAd()) {
+                    ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.BITRATE, height);
+                }
             }
         }
     }
@@ -994,7 +996,7 @@ public class ReactExoplayerView extends FrameLayout implements
                 .setMediaSourceFactory(mediaSourceFactory)
                 .setReleaseTimeoutMs(playerReleaseTimeoutMs)
                 .build();
-//        initConvivaAnalyticsSession(adsLoader);
+        initConvivaAnalyticsSession(adsLoader);
         ReactNativeVideoManager.Companion.getInstance().onInstanceCreated(instanceId, player);
         refreshDebugState();
         player.addListener(self);
@@ -1449,7 +1451,7 @@ public class ReactExoplayerView extends FrameLayout implements
 
             ReactNativeVideoManager.Companion.getInstance().onInstanceRemoved(instanceId, player);
             player = null;
-//            destroyConvivaAnalyticsSession();
+            destroyConvivaAnalyticsSession();
         }
 
         if (adsLoader != null) {
@@ -1550,9 +1552,9 @@ public class ReactExoplayerView extends FrameLayout implements
         if (player != null) {
             if (!player.getPlayWhenReady()) {
                 setPlayWhenReady(true);
-//                if (isPlayingAd()) {
-//                    ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.PLAYER_STATE, ConvivaSdkConstants.PlayerState.PLAYING);
-//                }
+                if (isPlayingAd()) {
+                    ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.PLAYER_STATE, ConvivaSdkConstants.PlayerState.PLAYING);
+                }
             }
             setKeepScreenOn(preventsDisplaySleepDuringVideoPlayback);
         }
@@ -1562,9 +1564,9 @@ public class ReactExoplayerView extends FrameLayout implements
         if (player != null) {
             if (player.getPlayWhenReady()) {
                 setPlayWhenReady(false);
-//                if (isPlayingAd()) {
-//                    ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.PLAYER_STATE, ConvivaSdkConstants.PlayerState.PAUSED);
-//                }
+                if (isPlayingAd()) {
+                    ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.PLAYER_STATE, ConvivaSdkConstants.PlayerState.PAUSED);
+                }
             }
         }
         setKeepScreenOn(false);
@@ -1934,9 +1936,9 @@ public class ReactExoplayerView extends FrameLayout implements
 
         isBuffering = buffering;
         eventEmitter.onVideoBuffer.invoke(buffering);
-//        if (isBuffering && isPlayingAd()) {
-//            ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.PLAYER_STATE, ConvivaSdkConstants.PlayerState.BUFFERING);
-//        }
+        if (isBuffering && isPlayingAd()) {
+            ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.PLAYER_STATE, ConvivaSdkConstants.PlayerState.BUFFERING);
+        }
     }
 
     @Override
@@ -2846,27 +2848,12 @@ public class ReactExoplayerView extends FrameLayout implements
                 adInfoGlobal = adInfo;
             }
         }
-        if (adEventName == "AD_BREAK_FETCH_ERROR" || adEventName == "UNKNOWN" || adEventName == "ERROR") {
-//            ConvivaHelper._reportAdBreakEnded();
-//            ConvivaHelper.setPlayerRef(player);
-        }
-        if (adEventName == "CONTENT_RESUME_REQUESTED") {
-            try {
-                if (player != null && adInfoGlobal != null && Integer.parseInt(adInfoGlobal.get("podIndex")) == 0) {
-                    adInfoGlobal = null;
-//                    ConvivaHelper._reportAdBreakEnded();
-//                    ConvivaHelper.setPlayerRef(player);
-                }
-            } catch (Exception e) {
-//                ConvivaHelper.setPlayerRef(player);
-            }
-        }
         if (adEvent.getAdData() != null) {
-            eventEmitter.onReceiveAdEvent.invoke(adEventName, adEvent.getAdData());
-        } else if (adInfo.size() > 0 && (adEventName == "LOADED" || adEventName == "STARTED" || adEventName == "UNKNOWN")) {
-            eventEmitter.onReceiveAdEvent.invoke(adEventName, adInfo);
+            eventEmitter.onReceiveAdEvent.invoke(adEvent.getType().name(), adEvent.getAdData());
+        } else if (adInfo.size() > 0 && (adEvent.getType().name() == "LOADED" || adEvent.getType().name() == "STARTED" || adEvent.getType().name() == "UNKNOWN")) {
+            eventEmitter.onReceiveAdEvent.invoke(adEvent.getType().name(), adInfo);
         } else {
-            eventEmitter.onReceiveAdEvent.invoke(adEventName, new HashMap<String, String>());
+            eventEmitter.onReceiveAdEvent.invoke(adEvent.getType().name(), new HashMap<String, String>());
         }
     }
 
@@ -2903,27 +2890,27 @@ public class ReactExoplayerView extends FrameLayout implements
      * +
      */
     public void setConvivaVideoAnalyticsState(boolean state) {
-//        enableConvivaVideoAnalytics = state;
+        enableConvivaVideoAnalytics = state;
     }
 
     public void setConvivaContentInfo(Map<String, Object> _convivaContentInfo) {
-//        convivaContentInfo = _convivaContentInfo;
+        convivaContentInfo = _convivaContentInfo;
     }
 
     public void initConvivaAnalyticsSession(ImaAdsLoader adsLoader) {
-//        if (enableConvivaVideoAnalytics == true) {
-//            ConvivaHelper.setPlayerReference(ConvivaHelper.buildVideoAnalytics(getContext()), player, convivaContentInfo, adTagUrl, adsLoader);
-//            playerInitTime = System.currentTimeMillis();
-//        }
+        if (enableConvivaVideoAnalytics == true) {
+            ConvivaHelper.setPlayerReference(ConvivaHelper.buildVideoAnalytics(getContext()), player, convivaContentInfo, source.getAdsProps().getAdTagUrl(), adsLoader);
+            playerInitTime = System.currentTimeMillis();
+        }
     }
 
     public void destroyConvivaAnalyticsSession() {
-//        if (enableConvivaVideoAnalytics == true) {
-//            ConvivaHelper._reportAdEnded();
-//            ConvivaHelper.releaseVideoAdAnalytics();
-//            ConvivaHelper.reportPlaybackEnded();
-//            ConvivaHelper.releaseVideoAnalytics();
-//        }
+        if (enableConvivaVideoAnalytics == true) {
+            ConvivaHelper._reportAdEnded();
+            ConvivaHelper.releaseVideoAdAnalytics();
+            ConvivaHelper.reportPlaybackEnded();
+            ConvivaHelper.releaseVideoAnalytics();
+        }
     }
 
     /**
