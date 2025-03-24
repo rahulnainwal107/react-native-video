@@ -1,7 +1,7 @@
 import AVFoundation
 import AVKit
 import Foundation
-// import ConvivaSDK
+import ConvivaSDK
 import SystemConfiguration
 import CoreTelephony
 #if USE_GOOGLE_IMA
@@ -70,7 +70,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     // Conviva
     private var _enableConvivaVideoAnalytics:Bool = false
     private var _convivaContentInfo: NSDictionary? = nil
-//    static var _RCTConvivaHelper:RCTConvivaHelper?
+    static var _RCTConvivaHelper:RCTConvivaHelper?
 
     // Reload Player
     var retryErrorCodes: [NSNumber] = []
@@ -598,7 +598,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
 
         if _player == nil {
             _player = AVPlayer()
-            // initConvivaAnalyticsSession()
+            initConvivaAnalyticsSession()
             ReactNativeVideoManager.shared.onInstanceCreated(id: instanceId, player: _player as Any)
 
             _player!.replaceCurrentItem(with: playerItem)
@@ -892,12 +892,9 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     func setSeek(_ time: NSNumber, _ tolerance: NSNumber, seekToLive:Bool) {
         let item: AVPlayerItem? = _player?.currentItem
         _pendingSeek = true
-        // if(_enableConvivaVideoAnalytics == true){
-        //     RCTVideo._RCTConvivaHelper?.reportSeekStarted(value: seekTime.floatValue)
-        // }
-        // if(_enableConvivaVideoAnalytics == true){
-        //     RCTVideo._RCTConvivaHelper?.reportSeekStarted(value: seekTime.floatValue)
-        // }
+        if(_enableConvivaVideoAnalytics == true){
+            RCTVideo._RCTConvivaHelper?.reportSeekStarted(value: time.floatValue)
+        }
         guard item != nil, let player = _player, let item, item.status == AVPlayerItem.Status.readyToPlay else {
             _pendingSeekTime = time.floatValue
             return
@@ -922,9 +919,9 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             guard let self else { return }
 
             self._playerObserver.addTimeObserverIfNotSet()
-            // if(_enableConvivaVideoAnalytics == true){
-            //     RCTVideo._RCTConvivaHelper?.reportSeekEnded(value: seekTime.floatValue)
-            // }
+            if(_enableConvivaVideoAnalytics == true){
+                RCTVideo._RCTConvivaHelper?.reportSeekEnded(value: time.floatValue)
+            }
             self.setPaused(self._paused)
             self.onVideoSeek?(["currentTime": NSNumber(value: Float(CMTimeGetSeconds(item.currentTime()))),
                                "seekTime": time,
@@ -1922,44 +1919,44 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         @objc
         func initConvivaAnalyticsSession(){
             if(_enableConvivaVideoAnalytics == true && _reloadingPlayer == false){
-//                if(RCTVideo._RCTConvivaHelper == nil){
-//                    RCTVideo._RCTConvivaHelper = RCTConvivaHelper()
-//                }else{
-//                    destroyConvivaAnalyticsSession()
-//                }
-//                RCTVideo._RCTConvivaHelper?.setPlayerReference(RCTVideo._RCTConvivaHelper?._buildVideoAnalytics(), newPlayer: _player,convivaContentInfo: _convivaContentInfo as! [String : Any])
+               if(RCTVideo._RCTConvivaHelper == nil){
+                   RCTVideo._RCTConvivaHelper = RCTConvivaHelper()
+               }else{
+                   destroyConvivaAnalyticsSession()
+               }
+               RCTVideo._RCTConvivaHelper?.setPlayerReference(RCTVideo._RCTConvivaHelper?._buildVideoAnalytics(), newPlayer: _player,convivaContentInfo: _convivaContentInfo as! [String : Any])
             }
         }
     
         @objc
         func destroyConvivaAnalyticsSession(){
             if(_enableConvivaVideoAnalytics == true && (!_reloadingPlayer || _reloadingPlayer && _destroyConvivaAfterReload == true)){
-//                RCTVideo._RCTConvivaHelper?._reportAdEnded()
-//                RCTVideo._RCTConvivaHelper?.releaseVideoAdAnalytics();
-//                RCTVideo._RCTConvivaHelper?.reportPlaybackEnded()
-//                RCTVideo._RCTConvivaHelper?.releaseVideoAnalytics()
-//                RCTVideo._RCTConvivaHelper = nil;
+               RCTVideo._RCTConvivaHelper?._reportAdEnded()
+               RCTVideo._RCTConvivaHelper?.releaseVideoAdAnalytics();
+               RCTVideo._RCTConvivaHelper?.reportPlaybackEnded()
+               RCTVideo._RCTConvivaHelper?.releaseVideoAnalytics()
+               RCTVideo._RCTConvivaHelper = nil;
             }
         }
     
         @objc
         func reportAdPlaying(){
-//            RCTVideo._RCTConvivaHelper?.reportAdMetric(_key: CIS_SSDK_PLAYBACK_METRIC_PLAYER_STATE, _value:PlayerState.CONVIVA_PLAYING.rawValue)
+            RCTVideo._RCTConvivaHelper?.reportAdMetric(_key: CIS_SSDK_PLAYBACK_METRIC_PLAYER_STATE, _value:PlayerState.CONVIVA_PLAYING.rawValue)
         }
     
         @objc
         func reportAdPaused(){
-//            RCTVideo._RCTConvivaHelper?.reportAdMetric(_key: CIS_SSDK_PLAYBACK_METRIC_PLAYER_STATE, _value:PlayerState.CONVIVA_PAUSED.rawValue)
+            RCTVideo._RCTConvivaHelper?.reportAdMetric(_key: CIS_SSDK_PLAYBACK_METRIC_PLAYER_STATE, _value:PlayerState.CONVIVA_PAUSED.rawValue)
         }
     
         @objc
         func reportAdBuffering(){
-//            RCTVideo._RCTConvivaHelper?.reportAdMetric(_key: CIS_SSDK_PLAYBACK_METRIC_PLAYER_STATE, _value:PlayerState.CONVIVA_BUFFERING.rawValue)
+            RCTVideo._RCTConvivaHelper?.reportAdMetric(_key: CIS_SSDK_PLAYBACK_METRIC_PLAYER_STATE, _value:PlayerState.CONVIVA_BUFFERING.rawValue)
         }
     
         @objc
         func reportAdBitrate(value:Any){
-//            RCTVideo._RCTConvivaHelper?.reportAdMetric(_key: CIS_SSDK_PLAYBACK_METRIC_BITRATE, _value:value)
+            RCTVideo._RCTConvivaHelper?.reportAdMetric(_key: CIS_SSDK_PLAYBACK_METRIC_BITRATE, _value:value)
         }
         /**
          Conviva methods Ends here
