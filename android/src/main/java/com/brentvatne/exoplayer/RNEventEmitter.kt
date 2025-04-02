@@ -23,8 +23,9 @@ class RNEventEmitter(private val mReactContext: ReactContext) : ReactContextBase
             writableMap.putString(key!!, value)
         }
 
-
-        mReactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-            .emit("NetworkEventData", writableMap)
+        if (mReactContext.hasActiveReactInstance()) {
+            mReactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("NetworkEventData", writableMap)
+        }
     }
 } /* End of RNEventEmitter - (ALC-3097)  */

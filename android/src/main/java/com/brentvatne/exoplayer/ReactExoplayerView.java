@@ -2534,32 +2534,62 @@ public class ReactExoplayerView extends FrameLayout implements
          * Date Patch: 03 Feb 2025
          * Author: Kaushal Gupta
          * */
-        if(rootView == null){
-            return;
-        }
+        if (rootView == null) return;
+
         LayoutParams layoutParams = new LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT);
 
         if (isInPictureInPicture) {
-            ViewGroup parent = (ViewGroup)exoPlayerView.getParent();
-            if (parent != null) {
+            ViewGroup parent = (ViewGroup) exoPlayerView.getParent();
+            if (parent != null && parent != rootView) {
                 parent.removeView(exoPlayerView);
             }
-            for (int i = 0; i < rootView.getChildCount(); i++) {
-                if (rootView.getChildAt(i) != exoPlayerView) {
-                    rootViewChildrenOriginalVisibility.add(rootView.getChildAt(i).getVisibility());
-                    rootView.getChildAt(i).setVisibility(View.GONE);
-                }
-            }
-            rootView.addView(exoPlayerView, layoutParams);
-        } else {
-            rootView.removeView(exoPlayerView);
-            if (!rootViewChildrenOriginalVisibility.isEmpty()) {
+            if (exoPlayerView.getParent() == null) {
+                rootViewChildrenOriginalVisibility.clear(); // Clear before storing new values
+
+                // Store visibility of all children EXCEPT the exoPlayerView
                 for (int i = 0; i < rootView.getChildCount(); i++) {
-                    rootView.getChildAt(i).setVisibility(rootViewChildrenOriginalVisibility.get(i));
+                    View child = rootView.getChildAt(i);
+                    if (child != exoPlayerView) {
+                        rootViewChildrenOriginalVisibility.add(child.getVisibility());
+                        child.setVisibility(View.GONE);
+                    }
                 }
+                rootView.addView(exoPlayerView, layoutParams);
+            }
+        } else {
+            if (exoPlayerView.getParent() == rootView) {
+                rootView.removeView(exoPlayerView);
+            }
+
+            // Copy the list before restoring to prevent ConcurrentModificationException
+            List<Integer> visibilityCopy = new ArrayList<>(rootViewChildrenOriginalVisibility);
+            rootViewChildrenOriginalVisibility.clear();
+
+            // Restore visibility safely
+            int restoreCount = Math.min(visibilityCopy.size(), rootView.getChildCount());
+            for (int i = 0; i < restoreCount; i++) {
+                if (i >= rootView.getChildCount()) break; // Prevent IndexOutOfBoundsException
+                rootView.getChildAt(i).setVisibility(visibilityCopy.get(i));
+            }
+
+            rootViewChildrenOriginalVisibility.clear(); // Clear after restoring to prevent stale data
+            if (exoPlayerView.getParent() == null) { // Double-check before adding
                 addView(exoPlayerView, 0, layoutParams);
+                Choreographer.getInstance().postFrameCallback(new Choreographer.FrameCallback() {
+                    @Override
+                    public void doFrame(long frameTimeNanos) {
+                        for (int i = 0; i < getChildCount(); i++) {
+                            View child = getChildAt(i);
+                            child.measure(MeasureSpec.makeMeasureSpec(getMeasuredWidth(), MeasureSpec.EXACTLY),
+                                    MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY));
+                            child.layout(0, 0, child.getMeasuredWidth(), child.getMeasuredHeight());
+                        }
+                        getViewTreeObserver().dispatchOnGlobalLayout();
+                        Choreographer.getInstance().postFrameCallback(this);
+                    }
+                });
             }
         }
     }
