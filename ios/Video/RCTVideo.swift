@@ -1430,6 +1430,11 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             NowPlayingInfoCenterManager.shared.removePlayer(player: player)
         }
 
+        let isReloadingPlayer = UserDefaults.standard.bool(forKey: "reloadingPlayer");
+        if(isReloadingPlayer == false){
+            destroyConvivaAnalyticsSession()
+        }
+
         // Unregister from AudioSessionManager
         AudioSessionManager.shared.unregisterView(view: self)
 
@@ -1493,6 +1498,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         if _isBuffering {
             _isBuffering = false
         }
+        UserDefaults.standard.set(false, forKey: "reloadingPlayer");
         onReadyForDisplay?([
             "target": reactTag as Any,
         ])
@@ -1631,9 +1637,6 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
                 }
             }
         }
-        if(_reloadingPlayer == false && retryErrorCodes.contains(Int(errorCode) as NSNumber)){
-            _reloadingPlayer = true;
-        }
         onVideoError?(
             [
                 "error": [
@@ -1767,9 +1770,6 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
                     }
                 }
             }
-        }
-        if(_reloadingPlayer == false && retryErrorCodes.contains(Int(errorCode) as NSNumber)){
-            _reloadingPlayer = true;
         }
         onVideoError?(
             [
@@ -1918,7 +1918,8 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     
         @objc
         func initConvivaAnalyticsSession(){
-            if(_enableConvivaVideoAnalytics == true && _reloadingPlayer == false){
+            let isReloadingPlayer = UserDefaults.standard.bool(forKey: "reloadingPlayer");
+            if(_enableConvivaVideoAnalytics == true && isReloadingPlayer == false){
                if(RCTVideo._RCTConvivaHelper == nil){
                    RCTVideo._RCTConvivaHelper = RCTConvivaHelper()
                }else{
@@ -1930,7 +1931,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     
         @objc
         func destroyConvivaAnalyticsSession(){
-            if(_enableConvivaVideoAnalytics == true && (!_reloadingPlayer || _reloadingPlayer && _destroyConvivaAfterReload == true)){
+            if(_enableConvivaVideoAnalytics == true){
                RCTVideo._RCTConvivaHelper?._reportAdEnded()
                RCTVideo._RCTConvivaHelper?.releaseVideoAdAnalytics();
                RCTVideo._RCTConvivaHelper?.reportPlaybackEnded()

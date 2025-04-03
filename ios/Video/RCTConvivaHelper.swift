@@ -48,6 +48,7 @@ class RCTConvivaHelper: RCTViewManager {
     func _buildVideoAnalytics() -> CISVideoAnalytics? {
         if (RCTConvivaHelper.analytics != nil && RCTConvivaHelper.videoAnalytics == nil) {
             RCTConvivaHelper.videoAnalytics = RCTConvivaHelper.analytics!.createVideoAnalytics()
+            UserDefaults.standard.set(true, forKey: "reloadingPlayer"); 
         }
         buildAdAnalytics();
         return RCTConvivaHelper.videoAnalytics;
@@ -388,6 +389,20 @@ class RCTConvivaHelper: RCTViewManager {
         RCTConvivaHelper.videoAnalytics = nil
         RCTConvivaHelper.analytics?.cleanup()
         RCTConvivaHelper.analytics = nil
+    }
+
+     @objc(resetConvivaReloadingState)
+    func resetConvivaReloadingState() {
+        let isReloadingPlayer = UserDefaults.standard.bool(forKey: "reloadingPlayer");
+        if(isReloadingPlayer == true) {
+            UserDefaults.standard.set(false, forKey: "reloadingPlayer");
+            if(RCTConvivaHelper.videoAnalytics != nil){
+                self._reportAdEnded()
+                self.releaseVideoAdAnalytics()
+                self.reportPlaybackEnded()
+                self.releaseVideoAnalytics()
+            }
+        }
     }
 
     @objc(reportPlaybackError:)

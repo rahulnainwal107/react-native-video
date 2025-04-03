@@ -20,6 +20,7 @@ export interface NativeConvivaHelper {
     reportPlaybackError:(message: string) => void;
     releaseVideoAnalyticsFromRN:() => void;
     releaseConvivaAnalytics:() => void;
+    resetConvivaReloadingState: () => void;
 }
 
 export default NativeModules.ConvivaHelper as NativeConvivaHelper;

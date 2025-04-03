@@ -37,5 +37,6 @@ RCT_EXTERN_METHOD(reportAdBitrate:(nonnull NSNumber *) bitrate)
 RCT_EXTERN_METHOD(reportAdLoaded:(NSDictionary *) adInfo)
 RCT_EXTERN_METHOD(reportAdStarted:(NSDictionary *) adInfo)
 RCT_EXTERN_METHOD(reportAdEnded)
+RCT_EXTERN_METHOD(resetConvivaReloadingState)
 @end
 

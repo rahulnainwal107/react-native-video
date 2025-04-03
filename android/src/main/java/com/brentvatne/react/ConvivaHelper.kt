@@ -244,6 +244,10 @@ class ConvivaHelper(private val reactContext: ReactApplicationContext) : ReactCo
         ConvivaAnalytics.release()
     }
 
+    @ReactMethod
+    fun resetConvivaReloadingState() {
+    }
+
     companion object {
         var videoAnalytics: ConvivaVideoAnalytics? = null
         var videoAdAnalytics: ConvivaAdAnalytics? = null

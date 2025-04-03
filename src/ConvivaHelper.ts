@@ -59,4 +59,7 @@ export const ConvivaHelper = {
   releaseConvivaAnalytics(){
     return NativeConvivaHelper.releaseConvivaAnalytics();
   },
+  resetConvivaReloadingState(){
+    return NativeConvivaHelper.resetConvivaReloadingState();
+  },
 };
