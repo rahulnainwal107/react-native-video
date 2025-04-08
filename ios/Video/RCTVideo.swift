@@ -1398,8 +1398,8 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         super.layoutSubviews()
         if _controls, let _playerViewController {
             _playerViewController.view.frame = bounds
-            _playerViewController.view.setNeedsLayout()
-            _playerViewController.view.layoutIfNeeded()
+            // _playerViewController.view.setNeedsLayout()
+            // _playerViewController.view.layoutIfNeeded()
 
             // ensure content overlay also resizes
             _playerViewController.contentOverlayView?.frame = bounds

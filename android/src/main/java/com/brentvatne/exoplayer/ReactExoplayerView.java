@@ -143,6 +143,7 @@ import com.google.ads.interactivemedia.v3.api.Ad;
 import com.google.ads.interactivemedia.v3.api.AdError;
 import com.google.ads.interactivemedia.v3.api.AdErrorEvent;
 import com.google.ads.interactivemedia.v3.api.AdEvent;
+import com.google.ads.interactivemedia.v3.api.AdPodInfo;
 import com.google.ads.interactivemedia.v3.api.ImaSdkFactory;
 import com.google.ads.interactivemedia.v3.api.ImaSdkSettings;
 import com.google.ads.interactivemedia.v3.impl.zze;
@@ -2852,15 +2853,31 @@ public class ReactExoplayerView extends FrameLayout implements
     @Override
     public void onAdEvent(AdEvent adEvent) {
         var adEventName = adEvent.getType().name();
+        Ad ad = null;
+        if (adEvent instanceof zze) {
+            ad = ((zze) adEvent).getAd();
+        }
+        if(adEventName == "AD_BUFFERING"){
+            ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.PLAYER_STATE, ConvivaSdkConstants.PlayerState.BUFFERING);
+        }
+        if(adEventName == "AD_CAN_PLAY"){
+            ConvivaHelper.reportAdMetric(ConvivaSdkConstants.PLAYBACK.PLAYER_STATE, ConvivaSdkConstants.PlayerState.PLAYING);
+        }
         if (adEvent.getAdData() != null) {
             eventEmitter.onReceiveAdEvent.invoke(adEventName, adEvent.getAdData());
-        } else {
-            eventEmitter.onReceiveAdEvent.invoke(adEventName, null);
-        }
-        Map<String, String> adInfo = new HashMap<>();
-        if (adEvent instanceof zze) {
-            Ad ad = ((zze) adEvent).getAd();
+        }else if (adEventName == "LOADED" || adEventName == "STARTED" || adEventName == "UNKNOWN") {
+            Map<String, String> adInfo = new HashMap<>();
             if (ad != null) {
+                AdPodInfo adPodInfo = ad.getAdPodInfo();
+                if (adPodInfo != null) {
+                    int podIndex = adPodInfo.getPodIndex();
+                    int totalAdsInPod = adPodInfo.getTotalAds();
+                    // Add AdPodInfo details
+                    adInfo.put("podIndex", String.valueOf(podIndex));
+                    adInfo.put("totalAdsInPod", String.valueOf(totalAdsInPod));
+                } else {
+                    Log.d(TAG, "AdPodInfo is null.");
+                }
                 adInfo.put("adId", ad.getAdId());
                 adInfo.put("adTitle", ad.getTitle());
                 adInfo.put("adSystem", ad.getAdSystem());
@@ -2874,16 +2891,16 @@ public class ReactExoplayerView extends FrameLayout implements
                 adInfo.put("universalAdIdValue", ad.getUniversalAdIdValue());
                 adInfo.put("universalAdIdRegistry", ad.getUniversalAdIdRegistry());
                 adInfo.put("adPosition", String.valueOf(ad.getAdPodInfo().getAdPosition()));
-                adInfo.put("podIndex", String.valueOf(ad.getAdPodInfo().getPodIndex()));
                 adInfoGlobal = adInfo;
             }
-        }
-        if (adEvent.getAdData() != null) {
-            eventEmitter.onReceiveAdEvent.invoke(adEvent.getType().name(), adEvent.getAdData());
-        } else if (adInfo.size() > 0 && (adEvent.getType().name() == "LOADED" || adEvent.getType().name() == "STARTED" || adEvent.getType().name() == "UNKNOWN")) {
-            eventEmitter.onReceiveAdEvent.invoke(adEvent.getType().name(), adInfo);
+            if(adInfo.size() > 0){
+                eventEmitter.onReceiveAdEvent.invoke(adEventName, adInfo);
+            }
         } else {
-            eventEmitter.onReceiveAdEvent.invoke(adEvent.getType().name(), new HashMap<String, String>());
+            if(adEventName == "AD_PROGRESS"){
+                return;
+            }
+            eventEmitter.onReceiveAdEvent.invoke(adEventName, new HashMap<String, String>());
         }
     }
 

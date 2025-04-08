@@ -126,8 +126,13 @@
                 }
                 adsManager.start()
             }
+            guard let adPodInfo = event.ad?.adPodInfo else { return }
+            let totalAdsInPod = adPodInfo.totalAds
+
             let adInfo = [
                 "adId": event.ad?.adId ?? "",
+                "podIndex":adPodInfo.podIndex ?? 0,
+                "totalAdsInPod":totalAdsInPod ?? 1,
                 "adTitle": event.ad?.adTitle ?? "",
                 "adSystem": event.ad?.adSystem ?? "",
                 "adDescription": event.ad?.adDescription ?? "",
@@ -151,7 +156,7 @@
                         "target": _video.reactTag!
                     ]
                     if type == "LOADED" || type == "STARTED" || type == "UNKNOWN" {
-                        eventData["adInfo"] = adInfo
+                        eventData["data"] = adInfo
                     }
                     _video.onReceiveAdEvent?(eventData)
                 } else {
@@ -160,7 +165,7 @@
                         "target": _video.reactTag!,
                     ]
                     if type == "LOADED" || type == "STARTED" || type == "UNKNOWN" {
-                        eventData["adInfo"] = adInfo
+                        eventData["data"] = adInfo
                     }
                     _video.onReceiveAdEvent?(eventData);
                 }

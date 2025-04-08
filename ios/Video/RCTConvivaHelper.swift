@@ -391,7 +391,7 @@ class RCTConvivaHelper: RCTViewManager {
         RCTConvivaHelper.analytics = nil
     }
 
-     @objc(resetConvivaReloadingState)
+    @objc(resetConvivaReloadingState)
     func resetConvivaReloadingState() {
         let isReloadingPlayer = UserDefaults.standard.bool(forKey: "reloadingPlayer");
         if(isReloadingPlayer == true) {
@@ -401,6 +401,7 @@ class RCTConvivaHelper: RCTViewManager {
                 self.releaseVideoAdAnalytics()
                 self.reportPlaybackEnded()
                 self.releaseVideoAnalytics()
+                RCTVideo._RCTConvivaHelper = nil;
             }
         }
     }
