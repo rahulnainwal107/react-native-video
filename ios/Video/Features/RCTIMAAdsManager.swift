@@ -112,7 +112,6 @@
         }
 
         // MARK: - IMAAdsManagerDelegate
-
         func adsManager(_ adsManager: IMAAdsManager, didReceive event: IMAAdEvent) {
             guard let _video else { return }
             // Mute ad if the main player is muted
