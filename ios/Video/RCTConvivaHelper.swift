@@ -18,7 +18,7 @@ class RCTConvivaHelper: RCTViewManager {
     static var videoAnalytics:CISVideoAnalytics?;
     static var videoAdAnalytics:CISAdAnalytics?;
 
-    @objc(initConviva:gatewayUrl:enableTouchstone)
+    @objc(initConviva:gatewayUrl:enableTouchstone:)
     func initConviva(customerKey: String, gatewayUrl: String?, enableTouchstone: Bool) {
         print("The value of variable is: \(customerKey) \(String(describing: gatewayUrl))")
         if enableTouchstone || _isDebugAssertConfiguration() {
