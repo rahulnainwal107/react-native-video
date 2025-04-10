@@ -30,8 +30,8 @@ class ConvivaHelper(private val reactContext: ReactApplicationContext) : ReactCo
      * Initialize the top-level object.
      */
     @ReactMethod
-    fun initConviva(customerKey: String?, gatewayUrl: String?) {
-        if (BuildConfig.DEBUG) {
+    fun initConviva(customerKey: String?, gatewayUrl: String?, enableTouchstone: Boolean ) {
+        if (enableTouchstone || BuildConfig.DEBUG) {
             val settings: MutableMap<String, Any> = HashMap()
             if (gatewayUrl != null) {
                 settings[ConvivaSdkConstants.GATEWAY_URL] = gatewayUrl

@@ -2,7 +2,7 @@ import {NativeModules} from 'react-native';
 
 // @TODO rename to "Spec" when applying new arch
 export interface NativeConvivaHelper {
-    initConviva:(customerKey?: string, gatewayUrl?: string) => void;
+    initConviva:(customerKey?: string, gatewayUrl?: string, enableTouchstone?: boolean) => void;
     buildVideoAnalytics:() => void;
     reportAdLoaded:(adInfo: Record<string, unknown>) => void;
     reportAdStarted:(adInfo: Record<string, unknown>) => void;

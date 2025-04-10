@@ -10,7 +10,7 @@
 
 @interface RCT_EXTERN_MODULE(ConvivaHelper, RCTViewManager)
 
-RCT_EXTERN_METHOD(initConviva:(NSString *)customerKey gatewayUrl:(NSString *)gatewayUrl)
+RCT_EXTERN_METHOD(initConviva:(NSString *)customerKey gatewayUrl:(NSString *)gatewayUrl enableTouchstone:(BOOL)enableTouchstone)
 RCT_EXTERN_METHOD(buildVideoAnalytics)
 //RCT_EXTERN_METHOD(setPlayerInfo:(NSDictionary *) playerInfo)
 RCT_EXTERN_METHOD(setContentInfo:(NSDictionary *) _contentInfo)

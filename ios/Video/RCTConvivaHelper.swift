@@ -18,23 +18,21 @@ class RCTConvivaHelper: RCTViewManager {
     static var videoAnalytics:CISVideoAnalytics?;
     static var videoAdAnalytics:CISAdAnalytics?;
 
-    @objc(initConviva:gatewayUrl:)
-    func initConviva(customerKey: String, gatewayUrl: String?) {
+    @objc(initConviva:gatewayUrl:enableTouchstone)
+    func initConviva(customerKey: String, gatewayUrl: String?, enableTouchstone: Bool) {
         print("The value of variable is: \(customerKey) \(String(describing: gatewayUrl))")
-#if DEBUG
-        do {
-            var settings: NSDictionary = [:];
-            if (gatewayUrl != nil){
+        if enableTouchstone || _isDebugAssertConfiguration() {
+        var settings: NSDictionary = [:]
+        if (gatewayUrl != nil){
                 settings = [CIS_SSDK_SETTINGS_GATEWAY_URL:gatewayUrl!, CIS_SSDK_SETTINGS_LOG_LEVEL:LogLevel.LOGLEVEL_DEBUG.rawValue]
             }else{
                 settings = [CIS_SSDK_SETTINGS_LOG_LEVEL:LogLevel.LOGLEVEL_DEBUG.rawValue]
             }
             let swiftSettings = settings as? [AnyHashable: Any]
-            RCTConvivaHelper.analytics = CISAnalyticsCreator.create(withCustomerKey: customerKey , settings:swiftSettings)
+            RCTConvivaHelper.analytics = CISAnalyticsCreator.create(withCustomerKey: customerKey, settings: swiftSettings)
+        } else {
+            RCTConvivaHelper.analytics = CISAnalyticsCreator.create(withCustomerKey: customerKey)!
         }
-#else
-        RCTConvivaHelper.analytics = CISAnalyticsCreator.create(withCustomerKey: customerKey)!
-#endif
     }
 
     @objc
