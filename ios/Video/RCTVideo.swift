@@ -1229,6 +1229,14 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
 
         viewController.view.frame = self.bounds
         viewController.player = player
+
+        // Set the initial playback speed in controls to match playback rate
+         if #available(iOS 16.0, *) {
+             if let initialSpeed = viewController.speeds.first(where: { $0.rate == _rate }) {
+                 viewController.selectSpeed(initialSpeed)
+             }
+         }
+
         if #available(iOS 9.0, tvOS 14.0, *) {
             viewController.allowsPictureInPicturePlayback = _enterPictureInPictureOnLeave
         }
@@ -1398,12 +1406,12 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         super.layoutSubviews()
         if _controls, let _playerViewController {
             _playerViewController.view.frame = bounds
-            // _playerViewController.view.setNeedsLayout()
-            // _playerViewController.view.layoutIfNeeded()
+            _playerViewController.view.setNeedsLayout()
+            _playerViewController.view.layoutIfNeeded()
 
             // ensure content overlay also resizes
             _playerViewController.contentOverlayView?.frame = bounds
-
+            
             // also adjust all subviews of contentOverlayView
             for subview in _playerViewController.contentOverlayView?.subviews ?? [] {
                 subview.frame = bounds
@@ -1750,8 +1758,10 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
                 }
             }
 
-            self.reactViewController().view.frame = bounds
-            self.reactViewController().view.setNeedsLayout()
+            if let reactVC = self.reactViewController() {
+                reactVC.view.frame = bounds
+                reactVC.view.setNeedsLayout()
+            }
         }
     }
 
