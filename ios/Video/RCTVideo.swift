@@ -284,15 +284,6 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             object: nil
         )
 
-        #if os(iOS)
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(handleRotation),
-                name: UIDevice.orientationDidChangeNotification,
-                object: nil
-            )
-        #endif
-
         _playerObserver._handlers = self
         #if USE_VIDEO_CACHING
             _videoCache.playerItemPrepareText = playerItemPrepareText
@@ -359,28 +350,6 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             let isExternalPlaybackActive = _player?.isExternalPlaybackActive ?? false
         #endif
         return isExternalPlaybackActive
-    }
-
-    @objc
-    func handleRotation() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-
-            self.setNeedsLayout()
-            self.layoutIfNeeded()
-
-            if let playerViewController = self._playerViewController {
-                playerViewController.view.frame = UIScreen.main.bounds
-                playerViewController.view.setNeedsLayout()
-                playerViewController.view.layoutIfNeeded()
-
-                // Update content overlay and subviews
-                playerViewController.contentOverlayView?.frame = UIScreen.main.bounds
-                for subview in playerViewController.contentOverlayView?.subviews ?? [] {
-                    subview.frame = UIScreen.main.bounds
-                }
-            }
-        }
     }
 
     @objc
