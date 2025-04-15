@@ -1112,17 +1112,17 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
                         self._playerViewController?.autorotate = self._fullscreenAutorotate
 
                         // update layout after entering fullscreen
-                        DispatchQueue.main.async {
-                            self._playerViewController?.view.frame = UIScreen.main.bounds
-                            self._playerViewController?.view.setNeedsLayout()
-                            self._playerViewController?.view.layoutIfNeeded()
+                        // DispatchQueue.main.async {
+                        //     self._playerViewController?.view.frame = UIScreen.main.bounds
+                        //     self._playerViewController?.view.setNeedsLayout()
+                        //     self._playerViewController?.view.layoutIfNeeded()
 
-                            // update content overlay subviews
-                            self._playerViewController?.contentOverlayView?.frame = UIScreen.main.bounds
-                            for subview in self._playerViewController?.contentOverlayView?.subviews ?? [] {
-                                subview.frame = UIScreen.main.bounds
-                            }
-                        }
+                        //     // update content overlay subviews
+                        //     self._playerViewController?.contentOverlayView?.frame = UIScreen.main.bounds
+                        //     for subview in self._playerViewController?.contentOverlayView?.subviews ?? [] {
+                        //         subview.frame = UIScreen.main.bounds
+                        //     }
+                        // }
 
                         self.onVideoFullscreenPlayerDidPresent?(["target": self.reactTag as Any])
                     })
@@ -1136,10 +1136,10 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             setControls(_controls)
 
             // ensure layout updates after exiting fullscreen
-            DispatchQueue.main.async {
-                self.setNeedsLayout()
-                self.layoutIfNeeded()
-            }
+            // DispatchQueue.main.async {
+            //     self.setNeedsLayout()
+            //     self.layoutIfNeeded()
+            // }
         }
     }
 
@@ -1372,23 +1372,37 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     }
 
     override func layoutSubviews() {
+        // super.layoutSubviews()
+        // if _controls, let _playerViewController {
+        //     _playerViewController.view.frame = bounds
+        //     _playerViewController.view.setNeedsLayout()
+        //     _playerViewController.view.layoutIfNeeded()
+
+        //     // ensure content overlay also resizes
+        //     _playerViewController.contentOverlayView?.frame = bounds
+            
+        //     // also adjust all subviews of contentOverlayView
+        //     for subview in _playerViewController.contentOverlayView?.subviews ?? [] {
+        //         subview.frame = bounds
+        //     }
+
+        //     // ensure preferredContentSize is set when in fullscreen
+        //     if _fullscreenPlayerPresented {
+        //         _playerViewController.preferredContentSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        //     }
+        // } else {
+        //     CATransaction.begin()
+        //     CATransaction.setAnimationDuration(0)
+        //     _playerLayer?.frame = bounds
+        //     CATransaction.commit()
+        // }
         super.layoutSubviews()
         if _controls, let _playerViewController {
             _playerViewController.view.frame = bounds
-            _playerViewController.view.setNeedsLayout()
-            _playerViewController.view.layoutIfNeeded()
-
-            // ensure content overlay also resizes
-            _playerViewController.contentOverlayView?.frame = bounds
             
             // also adjust all subviews of contentOverlayView
             for subview in _playerViewController.contentOverlayView?.subviews ?? [] {
                 subview.frame = bounds
-            }
-
-            // ensure preferredContentSize is set when in fullscreen
-            if _fullscreenPlayerPresented {
-                _playerViewController.preferredContentSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
             }
         } else {
             CATransaction.begin()
